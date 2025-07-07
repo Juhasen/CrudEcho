@@ -2,7 +2,6 @@ package user
 
 import (
 	"RestCrud/internal/db"
-	"errors"
 	"fmt"
 )
 
@@ -22,11 +21,11 @@ func NewRepo() *Repo {
 func (r *Repo) Save(user *User) error {
 	users := make(map[string]User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return err
+		return ErrLoadDataFailed
 	}
 
 	if user.ID == "" {
-		return errors.New("error: user ID cannot be empty")
+		return ErrUserIDRequired
 	}
 
 	if _, exists := users[user.ID]; exists {
@@ -59,11 +58,11 @@ func (r *Repo) FindByID(id string) (*User, error) {
 func (r *Repo) FindAll() (*map[string]User, error) {
 	users := make(map[string]User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return nil, err
+		return nil, ErrLoadDataFailed
 	}
 
 	if len(users) == 0 {
-		return nil, errors.New("error: no users found")
+		return nil, ErrNoUsersFound
 	}
 
 	return &users, nil

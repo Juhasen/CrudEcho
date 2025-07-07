@@ -1,6 +1,9 @@
 package user
 
-import "github.com/labstack/echo/v4"
+import (
+	"errors"
+	"github.com/labstack/echo/v4"
+)
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
 	e.POST("/users", h.CreateUser)
@@ -43,7 +46,15 @@ func (h *Handler) GetUser(c echo.Context) error {
 func (h *Handler) GetAllUsers(c echo.Context) error {
 	users, err := h.Service.GetAllUsers()
 	if err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to retrieve users"})
+		switch {
+		case errors.Is(err, ErrNoUsersFound):
+			return c.JSON(404, map[string]string{"error": err.Error()})
+		case errors.Is(err, ErrUserIDRequired):
+			return c.JSON(400, map[string]string{"error": err.Error()})
+		case errors.Is(err, ErrLoadDataFailed):
+			return c.JSON(500, map[string]string{"error": err.Error()})
+		}
+		return c.JSON(500, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(200, users)
 }
