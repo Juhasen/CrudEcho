@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	Save(task *Task) error
 	FindByID(id string) (*Task, error)
-	FindAll() ([]*Task, error)
+	FindAll() (*map[string]Task, error)
 	Delete(id string) error
 }
 
@@ -25,15 +25,15 @@ func (r *Repo) Save(task *Task) error {
 		return err
 	}
 
-	if task.Id == "" {
+	if task.ID == "" {
 		return errors.New("error: task ID cannot be empty")
 	}
 
-	if _, exists := tasks[task.Id]; exists {
-		return fmt.Errorf("error: task with ID:%s already exists", task.Id)
+	if _, exists := tasks[task.ID]; exists {
+		return fmt.Errorf("error: task with ID:%s already exists", task.ID)
 	}
 
-	tasks[task.Id] = *task
+	tasks[task.ID] = *task
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
 		return err

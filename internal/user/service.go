@@ -9,19 +9,19 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreateUser(user *User) error {
-	return s.Repo.Create(user)
+	return s.Repo.Save(user)
 }
 
 func (s *Service) GetUserByID(id string) (*User, error) {
 	return s.Repo.FindByID(id)
 }
 
-func (s *Service) GetAllUsers() ([]*User, error) {
+func (s *Service) GetAllUsers() (*map[string]User, error) {
 	return s.Repo.FindAll()
 }
 
 func (s *Service) UpdateUser(user *User) error {
-	return s.Repo.Update(user)
+	return s.Repo.Save(user)
 }
 
 func (s *Service) DeleteUser(id string) error {
