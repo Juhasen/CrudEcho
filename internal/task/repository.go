@@ -1,6 +1,12 @@
 package task
 
-import "RestCrud/pkg/repository"
+type Repository interface {
+	Create(task *Task) error
+	FindByID(id string) (*Task, error)
+	FindAll() ([]*Task, error)
+	Update(task *Task) error
+	Delete(id string) error
+}
 
 type Repo struct{}
 

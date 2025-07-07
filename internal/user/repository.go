@@ -1,6 +1,12 @@
 package user
 
-import "RestCrud/pkg/repository"
+type Repository interface {
+	Create(user *User) error
+	FindByID(id string) (*User, error)
+	FindAll() ([]*User, error)
+	Update(user *User) error
+	Delete(id string) error
+}
 
 type Repo struct{}
 

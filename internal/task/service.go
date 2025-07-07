@@ -1,12 +1,10 @@
 package task
 
-import "RestCrud/pkg/repository"
-
 type Service struct {
-	Repo CrudRepository[Task]
+	Repo Repository
 }
 
-func NewService(repo CrudRepository) *Service {
+func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 

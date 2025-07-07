@@ -1,9 +1,7 @@
 package user
 
-import "RestCrud/pkg/repository"
-
 type Service struct {
-	Repo CrudRepository[User]
+	Repo Repository
 }
 
 func NewService(repo Repository) *Service {
