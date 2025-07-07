@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-const UserFile = "users.json"
-const TaskFile = "tasks.json"
+const UserFile = "internal/db/data/users.json"
+const TaskFile = "internal/db/data/tasks.json"
 
 func LoadData(filename string, data interface{}) error {
 	file, err := os.ReadFile(filename)
