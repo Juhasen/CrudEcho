@@ -2,14 +2,18 @@ package user
 
 import (
 	"RestCrud/internal/db"
+	"RestCrud/internal/user/dto"
 	"fmt"
+	"github.com/google/uuid"
 )
 
 type Repository interface {
-	Save(user *User) error
+	Save(user *dto.UserDTO) error
 	FindByID(id string) (*User, error)
 	FindAll() (*map[string]User, error)
 	Delete(id string) error
+	FindByEmail(email string) (*User, error)
+	Update(id string, user *dto.UserUpdateDTO) error
 }
 
 type Repo struct{}
@@ -18,13 +22,19 @@ func NewRepo() *Repo {
 	return &Repo{}
 }
 
-func (r *Repo) Save(user *User) error {
+func (r *Repo) Save(user *dto.UserDTO) error {
 	users := make(map[string]User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return ErrLoadDataFailed
 	}
 
-	users[user.ID] = *user
+	userToStore := User{
+		ID:    uuid.New().String(),
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	users[userToStore.ID] = userToStore
 
 	if err := db.SaveData(db.UserFile, users); err != nil {
 		return err
@@ -77,4 +87,47 @@ func (r *Repo) Delete(id string) error {
 	}
 
 	return nil
+}
+
+func (r *Repo) Update(id string, userRequest *dto.UserUpdateDTO) error {
+	users := make(map[string]User)
+	if err := db.LoadData(db.UserFile, &users); err != nil {
+		return ErrLoadDataFailed
+	}
+
+	user, err := r.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	if userRequest.Name != nil {
+		user.Name = *userRequest.Name
+	}
+
+	if userRequest.Email != nil {
+		user.Email = *userRequest.Email
+	}
+
+	users[id] = *user
+
+	if err := db.SaveData(db.UserFile, users); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repo) FindByEmail(email string) (*User, error) {
+	users := make(map[string]User)
+	if err := db.LoadData(db.UserFile, &users); err != nil {
+		return nil, ErrLoadDataFailed
+	}
+
+	for _, user := range users {
+		if user.Email == email {
+			return &user, nil
+		}
+	}
+
+	return nil, ErrUserEmailNotFound
 }

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"RestCrud/internal/user/dto"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -24,16 +25,16 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
-	var user User
-	if err := c.Bind(&user); err != nil {
+	var userRequest dto.UserDTO
+	if err := c.Bind(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
-	if err := h.Service.CreateUser(&user); err != nil {
+	if err := h.Service.CreateUser(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(http.StatusCreated, user)
+	return c.JSON(http.StatusCreated, userRequest)
 }
 
 func (h *Handler) GetUser(c echo.Context) error {
@@ -75,14 +76,14 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 
 func (h *Handler) UpdateUser(c echo.Context) error {
 	id := c.Param("id")
-	var user User
+	var user dto.UserUpdateDTO
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
+		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
-	user.ID = id // Assuming ID is a string in User struct
-	if err := h.Service.UpdateUser(&user); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
+	user.ID = id
+	if err := h.Service.UpdateUser(id, &user); err != nil {
+		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -91,7 +92,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	if err := h.Service.DeleteUser(id); err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
+		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 	return c.NoContent(http.StatusNoContent)
 }

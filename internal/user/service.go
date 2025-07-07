@@ -1,5 +1,9 @@
 package user
 
+import (
+	"RestCrud/internal/user/dto"
+)
+
 type Service struct {
 	Repo Repository
 }
@@ -8,7 +12,7 @@ func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) CreateUser(user *User) error {
+func (s *Service) CreateUser(user *dto.UserDTO) error {
 	if user.Name == "" {
 		return ErrUserNameRequired
 	}
@@ -17,25 +21,51 @@ func (s *Service) CreateUser(user *User) error {
 		return ErrUserEmailRequired
 	}
 
-	if user, _ := s.GetUserByID(user.ID); user == nil {
-		return ErrUserAlreadyExists
+	//TODO: Check if user already exists by EMAIL
+	//if user, _ := s.GetUserByID(user.ID); user == nil {
+	//	return ErrUserAlreadyExists
+	//}
+
+	return s.Repo.Save(user)
+}
+
+func (s *Service) GetUserByID(id string) (*dto.UserDTO, error) {
+	user, err := s.Repo.FindByID(id)
+	return userToDTO(user), err
+}
+
+func (s *Service) GetAllUsers() (*map[string]dto.UserDTO, error) {
+
+	users, err := s.Repo.FindAll()
+	if err != nil {
+		return nil, err
 	}
 
-	return s.Repo.Save(user)
+	var usersDTO = make(map[string]dto.UserDTO)
+	for _, user := range *users {
+		dtoUser := userToDTO(&user)
+		if dtoUser != nil {
+			usersDTO[user.ID] = *dtoUser
+		}
+	}
+
+	return &usersDTO, err
 }
 
-func (s *Service) GetUserByID(id string) (*User, error) {
-	return s.Repo.FindByID(id)
-}
-
-func (s *Service) GetAllUsers() (*map[string]User, error) {
-	return s.Repo.FindAll()
-}
-
-func (s *Service) UpdateUser(user *User) error {
-	return s.Repo.Save(user)
+func (s *Service) UpdateUser(id string, user *dto.UserUpdateDTO) error {
+	return s.Repo.Update(id, user)
 }
 
 func (s *Service) DeleteUser(id string) error {
 	return s.Repo.Delete(id)
+}
+
+func userToDTO(u *User) *dto.UserDTO {
+	if u == nil {
+		return nil
+	}
+	return &dto.UserDTO{
+		Name:  u.Name,
+		Email: u.Email,
+	}
 }
