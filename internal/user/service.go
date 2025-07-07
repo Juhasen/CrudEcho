@@ -9,6 +9,18 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) CreateUser(user *User) error {
+	if user.Name == "" {
+		return ErrUserNameRequired
+	}
+
+	if user.Email == "" {
+		return ErrUserEmailRequired
+	}
+
+	if user, _ := s.GetUserByID(user.ID); user == nil {
+		return ErrUserAlreadyExists
+	}
+
 	return s.Repo.Save(user)
 }
 

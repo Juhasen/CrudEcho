@@ -24,14 +24,6 @@ func (r *Repo) Save(user *User) error {
 		return ErrLoadDataFailed
 	}
 
-	if user.ID == "" {
-		return ErrUserIDRequired
-	}
-
-	if _, exists := users[user.ID]; exists {
-		return fmt.Errorf("error: user with ID:%s already exists", user.ID)
-	}
-
 	users[user.ID] = *user
 
 	if err := db.SaveData(db.UserFile, users); err != nil {
@@ -44,12 +36,12 @@ func (r *Repo) Save(user *User) error {
 func (r *Repo) FindByID(id string) (*User, error) {
 	users := make(map[string]User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return &User{}, err
+		return nil, ErrLoadDataFailed
 	}
 
 	user, found := users[id]
 	if !found {
-		return &User{}, fmt.Errorf("error: user with ID:%s not found", id)
+		return nil, ErrUserIdNotFound
 	}
 
 	return &user, nil

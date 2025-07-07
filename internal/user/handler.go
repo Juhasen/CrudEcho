@@ -1,8 +1,10 @@
 package user
 
 import (
+	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
@@ -24,23 +26,35 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) CreateUser(c echo.Context) error {
 	var user User
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid input"})
+		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
 	if err := h.Service.CreateUser(&user); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to create user"})
+		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 
-	return c.JSON(201, user)
+	return c.JSON(http.StatusCreated, user)
 }
 
 func (h *Handler) GetUser(c echo.Context) error {
 	id := c.Param("id")
+	if id == "" {
+		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
+	}
+
 	user, err := h.Service.GetUserByID(id)
 	if err != nil {
-		return c.NoContent(404)
+		switch {
+		case errors.Is(err, ErrUserIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, err)
+		case errors.Is(err, ErrUserIDRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
+		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
-	return c.JSON(200, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
@@ -48,36 +62,36 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNoUsersFound):
-			return c.JSON(404, map[string]string{"error": err.Error()})
+			return utils.ReturnApiError(c, http.StatusNotFound, err)
 		case errors.Is(err, ErrUserIDRequired):
-			return c.JSON(400, map[string]string{"error": err.Error()})
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		case errors.Is(err, ErrLoadDataFailed):
-			return c.JSON(500, map[string]string{"error": err.Error()})
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
-		return c.JSON(500, map[string]string{"error": err.Error()})
+		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
-	return c.JSON(200, users)
+	return c.JSON(http.StatusOK, users)
 }
 
 func (h *Handler) UpdateUser(c echo.Context) error {
 	id := c.Param("id")
 	var user User
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid input"})
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid input"})
 	}
 
 	user.ID = id // Assuming ID is a string in User struct
 	if err := h.Service.UpdateUser(&user); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to update user"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
 	}
 
-	return c.JSON(200, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 	if err := h.Service.DeleteUser(id); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to delete user"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to delete user"})
 	}
-	return c.NoContent(204)
+	return c.NoContent(http.StatusNoContent)
 }
