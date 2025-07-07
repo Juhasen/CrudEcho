@@ -26,6 +26,7 @@ func NewHandler(service *Service) *Handler {
 
 func (h *Handler) CreateUser(c echo.Context) error {
 	var userRequest dto.UserDTO
+
 	if err := c.Bind(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
@@ -39,6 +40,7 @@ func (h *Handler) CreateUser(c echo.Context) error {
 
 func (h *Handler) GetUser(c echo.Context) error {
 	id := c.Param("id")
+
 	if id == "" {
 		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
 	}
@@ -53,6 +55,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 		case errors.Is(err, ErrLoadDataFailed):
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
+
 		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, user)
@@ -60,6 +63,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 
 func (h *Handler) GetAllUsers(c echo.Context) error {
 	users, err := h.Service.GetAllUsers()
+
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNoUsersFound):
@@ -69,6 +73,7 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 		case errors.Is(err, ErrLoadDataFailed):
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
+
 		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, users)
@@ -76,12 +81,19 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 
 func (h *Handler) UpdateUser(c echo.Context) error {
 	id := c.Param("id")
+
+	if id == "" {
+		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
+	}
+
 	var user dto.UserUpdateDTO
+
 	if err := c.Bind(&user); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
 	user.ID = id
+
 	if err := h.Service.UpdateUser(id, &user); err != nil {
 		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
@@ -91,8 +103,14 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 
 func (h *Handler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
+
+	if id == "" {
+		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
+	}
+
 	if err := h.Service.DeleteUser(id); err != nil {
 		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
+
 	return c.NoContent(http.StatusNoContent)
 }

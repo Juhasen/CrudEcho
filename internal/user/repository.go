@@ -3,7 +3,6 @@ package user
 import (
 	"RestCrud/internal/db"
 	"RestCrud/internal/user/dto"
-	"fmt"
 	"github.com/google/uuid"
 )
 
@@ -77,7 +76,7 @@ func (r *Repo) Delete(id string) error {
 	}
 
 	if _, found := users[id]; !found {
-		return fmt.Errorf("error: user with ID:%s not found", id)
+		return ErrUserIdNotFound
 	}
 
 	delete(users, id)
