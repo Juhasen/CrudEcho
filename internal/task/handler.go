@@ -55,7 +55,7 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 		return c.JSON(400, map[string]string{"error": "Invalid input"})
 	}
 
-	task.Id = id // Assuming Id is a string in Task struct
+	task.ID = id // Assuming Id is a string in Task struct
 	if err := h.Service.UpdateTask(&task); err != nil {
 		return c.JSON(500, map[string]string{"error": "Failed to update task"})
 	}
