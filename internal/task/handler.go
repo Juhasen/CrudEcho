@@ -1,6 +1,10 @@
 package task
 
-import "github.com/labstack/echo/v4"
+import (
+	"RestCrud/pkg/utils"
+	"errors"
+	"github.com/labstack/echo/v4"
+)
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
 	e.POST("/tasks", h.CreateTask)
@@ -65,7 +69,14 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 
 func (h *Handler) DeleteTask(c echo.Context) error {
 	id := c.Param("id")
+
 	if err := h.Service.DeleteTask(id); err != nil {
+		switch {
+		case errors.Is(err, ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, 400, ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, 404, ErrTaskWithGivenIdNotFound)
+		}
 		return c.JSON(500, map[string]string{"error": "Failed to delete task"})
 	}
 	return c.NoContent(204)

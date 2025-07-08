@@ -2,7 +2,6 @@ package task
 
 import (
 	"RestCrud/internal/user"
-	"errors"
 	"time"
 )
 
@@ -31,17 +30,20 @@ func (s *Service) UpdateTask(task *Task) error {
 }
 
 func (s *Service) DeleteTask(id string) error {
+	if id == "" {
+		return ErrTaskIdCannotBeEmpty
+	}
 	return s.Repo.Delete(id)
 }
 
 func validateTask(task *Task, repository user.Repository) error {
 	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId == "" || task.Status == "" {
-		return errors.New("error: you must specify the title, description, due date, status, and user ID for the task")
+		return ErrAllArgumentsRequired
 	}
 
 	// Check if the status is valid
 	if task.Status != string(StatusPending) && task.Status != string(StatusInProgress) && task.Status != string(StatusCompleted) && task.Status != string(StatusCancelled) {
-		return errors.New("error: status must be one of Pending, InProgress, Completed or Cancelled")
+		return ErrInvalidStatus
 	}
 
 	// Check if the user ID exists
@@ -52,12 +54,12 @@ func validateTask(task *Task, repository user.Repository) error {
 	// Parse due date
 	parsedDate, err := time.Parse("02/01/2006", task.DueDate)
 	if err != nil {
-		return errors.New("error: invalid date format, expected DD/MM/YYYY")
+		return ErrInvalidDateFormat
 	}
 
 	// Check if the date is in the future
 	if parsedDate.Before(time.Now()) {
-		return errors.New("error: due date must be in the future")
+		return ErrDueDateInPast
 	}
 
 	return nil
