@@ -19,7 +19,7 @@ func main() {
 
 	// Task domain setup
 	taskRepo := task.NewRepo()
-	taskService := task.NewService(taskRepo)
+	taskService := task.NewService(taskRepo, userRepo)
 	taskHandler := task.NewHandler(taskService)
 	task.RegisterRoutes(e, taskHandler)
 

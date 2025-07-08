@@ -1,6 +1,7 @@
 package task
 
 import (
+	"RestCrud/internal/task/dto"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -24,7 +25,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) CreateTask(c echo.Context) error {
-	var task Task
+	var task dto.TaskRequestDTO
 	if err := c.Bind(&task); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
@@ -41,6 +42,8 @@ func (h *Handler) CreateTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, ErrDueDateInPast)
 		case errors.Is(err, ErrTaskIdCannotBeEmpty):
 			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -83,14 +86,26 @@ func (h *Handler) GetAllTasks(c echo.Context) error {
 
 func (h *Handler) UpdateTask(c echo.Context) error {
 	id := c.Param("id")
-	var task Task
+	var task dto.TaskRequestDTO
 	if err := c.Bind(&task); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid input"})
+		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
-	task.ID = id // Assuming Id is a string in Task struct
-	if err := h.Service.UpdateTask(&task); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to update task"})
+	if err := h.Service.UpdateTask(id, &task); err != nil {
+		switch {
+		case errors.Is(err, ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, ErrInvalidStatus):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidStatus)
+		case errors.Is(err, ErrInvalidDateFormat):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidDateFormat)
+		case errors.Is(err, ErrDueDateInPast):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrDueDateInPast)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, task)

@@ -21,10 +21,9 @@ func (s *Service) CreateUser(user *dto.UserDTO) error {
 		return ErrUserEmailRequired
 	}
 
-	//TODO: Check if user already exists by EMAIL
-	//if user, _ := s.GetUserByID(user.ID); user == nil {
-	//	return ErrUserAlreadyExists
-	//}
+	if _, err := s.Repo.FindByEmail(user.Email); err == nil {
+		return ErrUserAlreadyExists
+	}
 
 	return s.Repo.Save(user)
 }

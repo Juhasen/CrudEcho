@@ -2,6 +2,7 @@ package task
 
 import (
 	"RestCrud/internal/db"
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -23,15 +24,16 @@ func (r *Repo) Save(task *Task) error {
 		return ErrLoadDataFailed
 	}
 
-	if task.ID == "" {
-		return ErrTaskIdCannotBeEmpty
+	taskToStore := Task{
+		ID:          uuid.New().String(),
+		Title:       task.Title,
+		Description: task.Description,
+		DueDate:     task.DueDate,
+		UserId:      task.UserId,
+		Status:      task.Status,
 	}
 
-	if _, exists := tasks[task.ID]; exists {
-		return ErrTaskWithGivenIdNotFound
-	}
-
-	tasks[task.ID] = *task
+	tasks[taskToStore.ID] = taskToStore
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
 		return ErrSaveDataFailed
