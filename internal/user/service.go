@@ -45,7 +45,7 @@ func (s *Service) GetAllUsers() (*map[string]dto.UserDTO, error) {
 	for _, user := range *users {
 		dtoUser := userToDTO(&user)
 		if dtoUser != nil {
-			usersDTO[user.ID] = *dtoUser
+			usersDTO[user.ID.String()] = *dtoUser
 		}
 	}
 

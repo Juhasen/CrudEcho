@@ -3,7 +3,7 @@ package user
 import (
 	"RestCrud/internal/user/dto"
 	"RestCrud/internal/user/model"
-	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Repository interface {
@@ -15,27 +15,23 @@ type Repository interface {
 	Update(id string, user *dto.UserUpdateDTO) error
 }
 
-type Repo struct{}
+type Repo struct {
+	DB *gorm.DB
+}
 
-func NewRepo() *Repo {
-	return &Repo{}
+func NewRepo(db *gorm.DB) *Repo {
+	return &Repo{DB: db}
 }
 
 func (r *Repo) Save(user *dto.UserDTO) error {
-	users := make(map[string]model.User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return ErrLoadDataFailed
-	}
-
+	// Create the model.User from DTO
 	userToStore := model.User{
-		ID:    uuid.New().String(),
 		Name:  user.Name,
 		Email: user.Email,
 	}
 
-	users[userToStore.ID] = userToStore
-
-	if err := db.SaveData(db.UserFile, users); err != nil {
+	// Save to DB
+	if err := r.DB.Create(&userToStore).Error; err != nil {
 		return err
 	}
 

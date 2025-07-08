@@ -5,6 +5,7 @@ import (
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type Repository interface {
@@ -14,10 +15,12 @@ type Repository interface {
 	Delete(id string) error
 }
 
-type Repo struct{}
+type Repo struct {
+	DB *gorm.DB
+}
 
-func NewRepo() *Repo {
-	return &Repo{}
+func NewRepo(db *gorm.DB) *Repo {
+	return &Repo{DB: db}
 }
 
 func (r *Repo) Save(task *model.Task) error {
