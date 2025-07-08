@@ -33,7 +33,7 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 		return err
 	}
 
-	return s.Repo.Save(dtoToTask(task))
+	return s.Repo.Save(task.ToModel())
 }
 
 func (s *Service) GetTaskByID(id string) (*model.Task, error) {
@@ -50,7 +50,7 @@ func (s *Service) GetAllTasks() ([]dto.TaskResponseDTO, error) {
 	}
 	var tasksDTO = make([]dto.TaskResponseDTO, 0, len(tasks))
 	for _, task := range tasks {
-		tasksDTO = append(tasksDTO, *taskToDTO(&task))
+		tasksDTO = append(tasksDTO, *task.ToResponseDTO())
 	}
 	return tasksDTO, err
 }
@@ -103,30 +103,4 @@ func (s *Service) DeleteTask(id string) error {
 		return errors.ErrTaskIdCannotBeEmpty
 	}
 	return s.Repo.Delete(id)
-}
-
-func taskToDTO(t *model.Task) *dto.TaskResponseDTO {
-	if t == nil {
-		return nil
-	}
-	return &dto.TaskResponseDTO{
-		Title:       t.Title,
-		Description: t.Description,
-		DueDate:     t.DueDate,
-		UserId:      t.UserID,
-		Status:      t.Status,
-	}
-}
-
-func dtoToTask(t *dto.TaskRequestDTO) *model.Task {
-	if t == nil {
-		return nil
-	}
-	return &model.Task{
-		Title:       t.Title,
-		Description: t.Description,
-		DueDate:     t.DueDate,
-		UserID:      t.UserId,
-		Status:      t.Status,
-	}
 }

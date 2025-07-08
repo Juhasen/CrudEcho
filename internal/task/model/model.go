@@ -1,6 +1,7 @@
 package model
 
 import (
+	"RestCrud/internal/task/dto"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"time"
@@ -24,4 +25,14 @@ type Task struct {
 	DueDate     time.Time `json:"due_date"`
 	Status      string    `gorm:"size:100;not null" json:"status"`
 	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+}
+
+func (t *Task) ToResponseDTO() *dto.TaskResponseDTO {
+	return &dto.TaskResponseDTO{
+		Title:       t.Title,
+		Description: t.Description,
+		DueDate:     t.DueDate,
+		UserId:      t.UserID,
+		Status:      t.Status,
+	}
 }

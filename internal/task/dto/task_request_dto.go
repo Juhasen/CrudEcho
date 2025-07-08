@@ -51,3 +51,13 @@ func (t *TaskRequestDTO) Validate() error {
 	}
 	return nil
 }
+
+func (t *TaskRequestDTO) ToModel() *model.Task {
+	return &model.Task{
+		Title:       t.Title,
+		Description: t.Description,
+		DueDate:     t.DueDate,
+		UserID:      t.UserId,
+		Status:      t.Status,
+	}
+}
