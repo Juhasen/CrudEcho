@@ -1,6 +1,7 @@
 package user
 
 import (
+	"RestCrud/internal/task/errors"
 	"RestCrud/internal/user/dto"
 	"RestCrud/internal/user/model"
 	"gorm.io/gorm"
@@ -23,15 +24,9 @@ func NewRepo(db *gorm.DB) *Repo {
 }
 
 func (r *Repo) Save(user *dto.UserResponseDTO) error {
-	userToStore := model.User{
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	if err := r.DB.Create(&userToStore).Error; err != nil {
+	if err := r.DB.Create(&user).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -55,8 +50,12 @@ func (r *Repo) FindAll() ([]model.User, error) {
 }
 
 func (r *Repo) Delete(id string) error {
-	if err := r.DB.Delete(&model.User{}, "id = ?", id).Error; err != nil {
-		return err
+	result := r.DB.Delete(&model.User{}, "id = ?", id)
+	if result.Error != nil {
+		return ErrFailedToDeleteUser
+	}
+	if result.RowsAffected == 0 {
+		return errors.ErrTaskWithGivenIdNotFound
 	}
 	return nil
 }
