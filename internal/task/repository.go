@@ -20,7 +20,7 @@ func NewRepo() *Repo {
 func (r *Repo) Save(task *Task) error {
 	tasks := make(map[string]Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return err
+		return ErrLoadDataFailed
 	}
 
 	if task.ID == "" {
@@ -34,7 +34,7 @@ func (r *Repo) Save(task *Task) error {
 	tasks[task.ID] = *task
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
-		return err
+		return ErrSaveDataFailed
 	}
 
 	return nil
@@ -43,7 +43,7 @@ func (r *Repo) Save(task *Task) error {
 func (r *Repo) FindByID(id string) (*Task, error) {
 	tasks := make(map[string]Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return &Task{}, err
+		return &Task{}, ErrLoadDataFailed
 	}
 
 	task, found := tasks[id]
@@ -57,7 +57,7 @@ func (r *Repo) FindByID(id string) (*Task, error) {
 func (r *Repo) FindAll() (*map[string]Task, error) {
 	tasks := make(map[string]Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return nil, err
+		return nil, ErrLoadDataFailed
 	}
 
 	if len(tasks) == 0 {
@@ -70,7 +70,7 @@ func (r *Repo) FindAll() (*map[string]Task, error) {
 func (r *Repo) Delete(id string) error {
 	tasks := make(map[string]Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return err
+		return ErrLoadDataFailed
 	}
 
 	if _, found := tasks[id]; !found {
@@ -80,7 +80,7 @@ func (r *Repo) Delete(id string) error {
 	delete(tasks, id)
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
-		return err
+		return ErrLoadDataFailed
 	}
 
 	return nil

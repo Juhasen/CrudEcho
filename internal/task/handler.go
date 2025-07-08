@@ -4,14 +4,15 @@ import (
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"net/http"
 )
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
-	e.POST("/tasks", h.CreateTask)
-	e.GET("/tasks/:id", h.GetTask)
-	e.GET("/tasks", h.GetAllTasks)
-	e.PUT("/tasks/:id", h.UpdateTask)
-	e.DELETE("/tasks/:id", h.DeleteTask)
+	e.POST("/api/tasks", h.CreateTask)
+	e.GET("/api/tasks/:id", h.GetTask)
+	e.GET("/api/tasks", h.GetAllTasks)
+	e.PUT("/api/tasks/:id", h.UpdateTask)
+	e.DELETE("/api/tasks/:id", h.DeleteTask)
 }
 
 type Handler struct {
@@ -25,31 +26,59 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) CreateTask(c echo.Context) error {
 	var task Task
 	if err := c.Bind(&task); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid input"})
+		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
 	if err := h.Service.CreateTask(&task); err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to create task"})
+		switch {
+		case errors.Is(err, ErrAllArgumentsRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrAllArgumentsRequired)
+		case errors.Is(err, ErrInvalidStatus):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidStatus)
+		case errors.Is(err, ErrInvalidDateFormat):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidDateFormat)
+		case errors.Is(err, ErrDueDateInPast):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrDueDateInPast)
+		case errors.Is(err, ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
-
-	return c.JSON(201, task)
+	return c.JSON(http.StatusCreated, task)
 }
 
 func (h *Handler) GetTask(c echo.Context) error {
 	id := c.Param("id")
 	task, err := h.Service.GetTaskByID(id)
 	if err != nil {
-		return c.NoContent(404)
+		switch {
+		case errors.Is(err, ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, ErrLoadDataFailed)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
-	return c.JSON(200, task)
+	return c.JSON(http.StatusOK, task)
 }
 
 func (h *Handler) GetAllTasks(c echo.Context) error {
 	tasks, err := h.Service.GetAllTasks()
 	if err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to retrieve tasks"})
+		switch {
+		case errors.Is(err, ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, ErrLoadDataFailed)
+		case errors.Is(err, ErrNoTasksFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, ErrNoTasksFound)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
-	return c.JSON(200, tasks)
+	return c.JSON(http.StatusOK, tasks)
 }
 
 func (h *Handler) UpdateTask(c echo.Context) error {
@@ -64,7 +93,7 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 		return c.JSON(500, map[string]string{"error": "Failed to update task"})
 	}
 
-	return c.JSON(200, task)
+	return c.JSON(http.StatusOK, task)
 }
 
 func (h *Handler) DeleteTask(c echo.Context) error {
@@ -79,5 +108,5 @@ func (h *Handler) DeleteTask(c echo.Context) error {
 		}
 		return c.JSON(500, map[string]string{"error": "Failed to delete task"})
 	}
-	return c.NoContent(204)
+	return c.NoContent(http.StatusNoContent)
 }

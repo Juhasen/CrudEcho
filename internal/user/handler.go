@@ -9,11 +9,11 @@ import (
 )
 
 func RegisterRoutes(e *echo.Echo, h *Handler) {
-	e.POST("/users", h.CreateUser)
-	e.GET("/users/:id", h.GetUser)
-	e.GET("/users", h.GetAllUsers)
-	e.PUT("/users/:id", h.UpdateUser)
-	e.DELETE("/users/:id", h.DeleteUser)
+	e.POST("/api/users", h.CreateUser)
+	e.GET("/api/users/:id", h.GetUser)
+	e.GET("/api/users", h.GetAllUsers)
+	e.PUT("/api/users/:id", h.UpdateUser)
+	e.DELETE("/api/users/:id", h.DeleteUser)
 }
 
 type Handler struct {

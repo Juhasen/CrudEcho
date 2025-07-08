@@ -18,6 +18,9 @@ func (s *Service) CreateTask(task *Task) error {
 }
 
 func (s *Service) GetTaskByID(id string) (*Task, error) {
+	if id == "" {
+		return nil, ErrTaskIdCannotBeEmpty
+	}
 	return s.Repo.FindByID(id)
 }
 
