@@ -117,11 +117,12 @@ func (h *Handler) DeleteTask(c echo.Context) error {
 	if err := h.Service.DeleteTask(id); err != nil {
 		switch {
 		case errors.Is(err, ErrTaskIdCannotBeEmpty):
-			return utils.ReturnApiError(c, 400, ErrTaskIdCannotBeEmpty)
+			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
 		case errors.Is(err, ErrTaskWithGivenIdNotFound):
-			return utils.ReturnApiError(c, 404, ErrTaskWithGivenIdNotFound)
+			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
-		return c.JSON(500, map[string]string{"error": "Failed to delete task"})
 	}
 	return c.NoContent(http.StatusNoContent)
 }

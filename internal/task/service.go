@@ -3,6 +3,7 @@ package task
 import (
 	"RestCrud/internal/task/dto"
 	"RestCrud/internal/user"
+	"strings"
 	"time"
 )
 
@@ -102,6 +103,9 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 		task.UserId = taskRequest.UserId
 	}
 	if taskRequest.Status != "" {
+		// Normalize the status to lowercase
+		taskRequest.Status = strings.ToLower(taskRequest.Status)
+
 		// Check if the status is valid
 		if taskRequest.Status != string(StatusPending) && taskRequest.Status != string(StatusInProgress) && taskRequest.Status != string(StatusCompleted) && taskRequest.Status != string(StatusCancelled) {
 			return ErrInvalidStatus
