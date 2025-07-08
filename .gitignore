@@ -1,2 +1,2 @@
 .idea
-internal/db/data/
+cmd/database/data/

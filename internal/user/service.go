@@ -2,6 +2,7 @@ package user
 
 import (
 	"RestCrud/internal/user/dto"
+	"RestCrud/internal/user/model"
 )
 
 type Service struct {
@@ -59,7 +60,7 @@ func (s *Service) DeleteUser(id string) error {
 	return s.Repo.Delete(id)
 }
 
-func userToDTO(u *User) *dto.UserDTO {
+func userToDTO(u *model.User) *dto.UserDTO {
 	if u == nil {
 		return nil
 	}

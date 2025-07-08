@@ -1,5 +1,10 @@
 package model
 
+import (
+	"github.com/google/uuid"
+	"time"
+)
+
 type Status string
 
 const (
@@ -10,10 +15,13 @@ const (
 )
 
 type Task struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	DueDate     string `json:"due_date"`
-	Status      string `json:"status"`
-	UserId      string `json:"user_id"`
+	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	Title       string    `gorm:"size:255;not null" json:"title"`
+	Description string    `gorm:"type:text" json:"description"`
+	DueDate     time.Time `json:"due_date"`
+	Status      string    `gorm:"size:100;not null" json:"status"`
+	UserID      uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

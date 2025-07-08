@@ -1,7 +1,7 @@
 package task
 
 import (
-	"RestCrud/internal/db"
+	"RestCrud/internal/database"
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
 	"github.com/google/uuid"

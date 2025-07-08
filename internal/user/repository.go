@@ -1,17 +1,17 @@
 package user
 
 import (
-	"RestCrud/internal/db"
 	"RestCrud/internal/user/dto"
+	"RestCrud/internal/user/model"
 	"github.com/google/uuid"
 )
 
 type Repository interface {
 	Save(user *dto.UserDTO) error
-	FindByID(id string) (*User, error)
-	FindAll() (*map[string]User, error)
+	FindByID(id string) (*model.User, error)
+	FindAll() (*map[string]model.User, error)
 	Delete(id string) error
-	FindByEmail(email string) (*User, error)
+	FindByEmail(email string) (*model.User, error)
 	Update(id string, user *dto.UserUpdateDTO) error
 }
 
@@ -22,12 +22,12 @@ func NewRepo() *Repo {
 }
 
 func (r *Repo) Save(user *dto.UserDTO) error {
-	users := make(map[string]User)
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return ErrLoadDataFailed
 	}
 
-	userToStore := User{
+	userToStore := model.User{
 		ID:    uuid.New().String(),
 		Name:  user.Name,
 		Email: user.Email,
@@ -42,8 +42,8 @@ func (r *Repo) Save(user *dto.UserDTO) error {
 	return nil
 }
 
-func (r *Repo) FindByID(id string) (*User, error) {
-	users := make(map[string]User)
+func (r *Repo) FindByID(id string) (*model.User, error) {
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return nil, ErrLoadDataFailed
 	}
@@ -56,8 +56,8 @@ func (r *Repo) FindByID(id string) (*User, error) {
 	return &user, nil
 }
 
-func (r *Repo) FindAll() (*map[string]User, error) {
-	users := make(map[string]User)
+func (r *Repo) FindAll() (*map[string]model.User, error) {
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return nil, ErrLoadDataFailed
 	}
@@ -70,7 +70,7 @@ func (r *Repo) FindAll() (*map[string]User, error) {
 }
 
 func (r *Repo) Delete(id string) error {
-	users := make(map[string]User)
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (r *Repo) Delete(id string) error {
 }
 
 func (r *Repo) Update(id string, userRequest *dto.UserUpdateDTO) error {
-	users := make(map[string]User)
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return ErrLoadDataFailed
 	}
@@ -116,8 +116,8 @@ func (r *Repo) Update(id string, userRequest *dto.UserUpdateDTO) error {
 	return nil
 }
 
-func (r *Repo) FindByEmail(email string) (*User, error) {
-	users := make(map[string]User)
+func (r *Repo) FindByEmail(email string) (*model.User, error) {
+	users := make(map[string]model.User)
 	if err := db.LoadData(db.UserFile, &users); err != nil {
 		return nil, ErrLoadDataFailed
 	}
