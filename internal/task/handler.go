@@ -45,6 +45,8 @@ func (h *Handler) CreateTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrTaskIdCannotBeEmpty)
 		case errors.Is(err, taskErr.ErrTaskWithGivenIdNotFound):
 			return utils.ReturnApiError(c, http.StatusNotFound, taskErr.ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, taskErr.ErrUserWithGivenIdDoesNotExist):
+			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrUserWithGivenIdDoesNotExist)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}

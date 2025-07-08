@@ -3,7 +3,6 @@ package dto
 import (
 	"RestCrud/internal/task/common"
 	"RestCrud/internal/task/errors"
-	"RestCrud/internal/task/model"
 	"github.com/google/uuid"
 	"time"
 )
@@ -11,16 +10,16 @@ import (
 type TaskRequestDTO struct {
 	Title       string        `json:"title,omitempty"`
 	Description string        `json:"description,omitempty"`
-	DueDate     time.Time     `json:"due_date,omitempty"`
+	DueDate     string        `json:"due_date,omitempty"`
 	UserId      uuid.UUID     `json:"user_id,omitempty"`
-	Status      status.Status `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
+	Status      common.Status `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
 }
 
 func (t *TaskRequestDTO) ValidateStatus() error {
-	if t.Status != status.Pending &&
-		t.Status != status.InProgress &&
-		t.Status != status.Completed &&
-		t.Status != status.Cancelled {
+	if t.Status != common.Pending &&
+		t.Status != common.InProgress &&
+		t.Status != common.Completed &&
+		t.Status != common.Cancelled {
 		return errors.ErrInvalidStatus
 	}
 	return nil
@@ -28,7 +27,7 @@ func (t *TaskRequestDTO) ValidateStatus() error {
 
 func (t *TaskRequestDTO) ValidateDate() error {
 	// Parse due date
-	parsedDate, err := time.Parse("02/01/2006", t.DueDate.String())
+	parsedDate, err := time.Parse("02/01/2006", t.DueDate)
 	if err != nil {
 		return errors.ErrInvalidDateFormat
 	}
@@ -51,14 +50,4 @@ func (t *TaskRequestDTO) Validate() error {
 		return err
 	}
 	return nil
-}
-
-func (t *TaskRequestDTO) ToModel() *model.Task {
-	return &model.Task{
-		Title:       t.Title,
-		Description: t.Description,
-		DueDate:     t.DueDate,
-		UserID:      t.UserId,
-		Status:      t.Status,
-	}
 }

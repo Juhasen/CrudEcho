@@ -1,6 +1,7 @@
 package task
 
 import (
+	"RestCrud/internal/task/common"
 	"RestCrud/internal/task/dto"
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
@@ -18,11 +19,15 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 }
 
 func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
-	if task.Title == "" || task.Description == "" || task.DueDate.String() == "" || task.UserId.String() == "" || task.Status == "" {
+	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId.String() == "" || task.Status == "" {
 		return errors.ErrAllArgumentsRequired
 	}
 
-	task.Status = strings.ToLower(task.Status)
+	if len(task.UserId.String()) < 36 {
+		return errors.ErrInvalidUserId
+	}
+
+	task.Status = common.Status(strings.ToLower(string(task.Status)))
 
 	if err := task.Validate(); err != nil {
 		return err
@@ -30,10 +35,10 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 
 	// Check if the user ID exists
 	if _, err := s.UserRepo.FindByID(task.UserId.String()); err != nil {
-		return err
+		return errors.ErrUserWithGivenIdDoesNotExist
 	}
 
-	return s.Repo.Save(task.ToModel())
+	return s.Repo.Save(model.TaskFromDTO(task))
 }
 
 func (s *Service) GetTaskByID(id string) (*model.Task, error) {
@@ -71,11 +76,14 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	if taskRequest.Description != "" {
 		task.Description = taskRequest.Description
 	}
-	if taskRequest.DueDate.String() != "" {
+	if taskRequest.DueDate != "" {
 		if err := taskRequest.ValidateDate(); err != nil {
 			return err
 		}
-		task.DueDate = taskRequest.DueDate
+		task.DueDate, err = common.ParseDateStringToTime(taskRequest.DueDate)
+		if err != nil {
+			return errors.ErrInvalidDateFormat
+		}
 	}
 	if taskRequest.UserId.String() != "" {
 		// Check if the user ID exists
@@ -86,7 +94,7 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	}
 	if taskRequest.Status != "" {
 		// Normalize the status to lowercase
-		taskRequest.Status = strings.ToLower(taskRequest.Status)
+		taskRequest.Status = common.Status(strings.ToLower(string(taskRequest.Status)))
 
 		if err := taskRequest.ValidateStatus(); err != nil {
 			return errors.ErrInvalidStatus
