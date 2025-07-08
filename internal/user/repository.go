@@ -2,13 +2,12 @@ package user
 
 import (
 	"RestCrud/internal/task/errors"
-	"RestCrud/internal/user/dto"
 	"RestCrud/internal/user/model"
 	"gorm.io/gorm"
 )
 
 type Repository interface {
-	Save(user *dto.UserResponseDTO) error
+	Save(user *model.User) error
 	FindByID(id string) (*model.User, error)
 	FindAll() ([]model.User, error)
 	Delete(id string) error
@@ -23,8 +22,8 @@ func NewRepo(db *gorm.DB) *Repo {
 	return &Repo{DB: db}
 }
 
-func (r *Repo) Save(user *dto.UserResponseDTO) error {
-	if err := r.DB.Create(&user).Error; err != nil {
+func (r *Repo) Save(user *model.User) error {
+	if err := r.DB.Save(&user).Error; err != nil {
 		return err
 	}
 	return nil

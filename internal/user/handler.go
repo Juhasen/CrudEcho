@@ -95,7 +95,16 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	user.ID = id
 
 	if err := h.Service.UpdateUser(id, &user); err != nil {
-		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, ErrUserIDRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserIDMismatch):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserAlreadyExists):
+			return utils.ReturnApiError(c, http.StatusConflict, err)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, user)

@@ -18,7 +18,7 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 }
 
 func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
-	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId == "" || task.Status == "" {
+	if task.Title == "" || task.Description == "" || task.DueDate.String() == "" || task.UserId.String() == "" || task.Status == "" {
 		return errors.ErrAllArgumentsRequired
 	}
 
@@ -29,7 +29,7 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 	}
 
 	// Check if the user ID exists
-	if _, err := s.UserRepo.FindByID(task.UserId); err != nil {
+	if _, err := s.UserRepo.FindByID(task.UserId.String()); err != nil {
 		return err
 	}
 
@@ -43,20 +43,16 @@ func (s *Service) GetTaskByID(id string) (*model.Task, error) {
 	return s.Repo.FindByID(id)
 }
 
-func (s *Service) GetAllTasks() (*map[string]dto.TaskResponseDTO, error) {
+func (s *Service) GetAllTasks() ([]dto.TaskResponseDTO, error) {
 	tasks, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
-	var tasksDTO = make(map[string]dto.TaskResponseDTO)
-	for _, task := range *tasks {
-		dtoTask := taskToDTO(&task)
-		if dtoTask != nil {
-			tasksDTO[task.ID] = *dtoTask
-		}
+	var tasksDTO = make([]dto.TaskResponseDTO, 0, len(tasks))
+	for _, task := range tasks {
+		tasksDTO = append(tasksDTO, *taskToDTO(&task))
 	}
-
-	return &tasksDTO, err
+	return tasksDTO, err
 }
 
 func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
@@ -75,18 +71,18 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	if taskRequest.Description != "" {
 		task.Description = taskRequest.Description
 	}
-	if taskRequest.DueDate != "" {
+	if taskRequest.DueDate.String() != "" {
 		if err := taskRequest.ValidateDate(); err != nil {
 			return err
 		}
 		task.DueDate = taskRequest.DueDate
 	}
-	if taskRequest.UserId != "" {
+	if taskRequest.UserId.String() != "" {
 		// Check if the user ID exists
-		if _, err := s.UserRepo.FindByID(taskRequest.UserId); err != nil {
+		if _, err := s.UserRepo.FindByID(taskRequest.UserId.String()); err != nil {
 			return err
 		}
-		task.UserId = taskRequest.UserId
+		task.UserID = taskRequest.UserId
 	}
 	if taskRequest.Status != "" {
 		// Normalize the status to lowercase
@@ -117,7 +113,7 @@ func taskToDTO(t *model.Task) *dto.TaskResponseDTO {
 		Title:       t.Title,
 		Description: t.Description,
 		DueDate:     t.DueDate,
-		UserId:      t.UserId,
+		UserId:      t.UserID,
 		Status:      t.Status,
 	}
 }
@@ -130,7 +126,7 @@ func dtoToTask(t *dto.TaskRequestDTO) *model.Task {
 		Title:       t.Title,
 		Description: t.Description,
 		DueDate:     t.DueDate,
-		UserId:      t.UserId,
+		UserID:      t.UserId,
 		Status:      t.Status,
 	}
 }

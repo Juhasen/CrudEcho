@@ -22,11 +22,11 @@ func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
 		return ErrUserEmailRequired
 	}
 
-	if _, err := s.Repo.FindByEmail(user.Email); err == nil {
+	if user, _ := s.Repo.FindByEmail(user.Email); user != nil {
 		return ErrUserAlreadyExists
 	}
 
-	return s.Repo.Save(user)
+	return s.Repo.Save(dtoToUser(user))
 }
 
 func (s *Service) GetUserByID(id string) (*dto.UserResponseDTO, error) {
@@ -61,17 +61,18 @@ func (s *Service) UpdateUser(id string, user *dto.UserRequestDTO) error {
 		return err
 	}
 
+	if user.Email != "" {
+		if user, _ := s.Repo.FindByEmail(existingUser.Email); user != nil {
+			return ErrUserAlreadyExists
+		}
+		existingUser.Email = user.Email
+	}
+
 	if user.Name != "" {
 		existingUser.Name = user.Name
 	}
-	if user.Email != "" {
-		existingUser.Email = user.Email
-	}
-	if _, err := s.Repo.FindByEmail(existingUser.Email); err == nil {
-		return ErrUserAlreadyExists
-	}
 
-	return s.Repo.Save(userToDTO(existingUser))
+	return s.Repo.Save(existingUser)
 }
 
 func (s *Service) DeleteUser(id string) error {
@@ -86,6 +87,16 @@ func userToDTO(u *model.User) *dto.UserResponseDTO {
 		return nil
 	}
 	return &dto.UserResponseDTO{
+		Name:  u.Name,
+		Email: u.Email,
+	}
+}
+
+func dtoToUser(u *dto.UserResponseDTO) *model.User {
+	if u == nil {
+		return nil
+	}
+	return &model.User{
 		Name:  u.Name,
 		Email: u.Email,
 	}

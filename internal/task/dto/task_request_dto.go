@@ -3,15 +3,16 @@ package dto
 import (
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
+	"github.com/google/uuid"
 	"time"
 )
 
 type TaskRequestDTO struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	DueDate     string `json:"due_date,omitempty"`
-	UserId      string `json:"user_id,omitempty"`
-	Status      string `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
+	Title       string    `json:"title,omitempty"`
+	Description string    `json:"description,omitempty"`
+	DueDate     time.Time `json:"due_date,omitempty"`
+	UserId      uuid.UUID `json:"user_id,omitempty"`
+	Status      string    `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
 }
 
 func (t *TaskRequestDTO) ValidateStatus() error {
@@ -26,7 +27,7 @@ func (t *TaskRequestDTO) ValidateStatus() error {
 
 func (t *TaskRequestDTO) ValidateDate() error {
 	// Parse due date
-	parsedDate, err := time.Parse("02/01/2006", t.DueDate)
+	parsedDate, err := time.Parse("02/01/2006", t.DueDate.String())
 	if err != nil {
 		return errors.ErrInvalidDateFormat
 	}

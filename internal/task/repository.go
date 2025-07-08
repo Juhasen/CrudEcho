@@ -9,7 +9,7 @@ import (
 type Repository interface {
 	Save(task *model.Task) error
 	FindByID(id string) (*model.Task, error)
-	FindAll() (*map[string]model.Task, error)
+	FindAll() ([]model.Task, error)
 	Delete(id string) error
 }
 
@@ -23,7 +23,7 @@ func NewRepo(db *gorm.DB) *Repo {
 
 func (r *Repo) Save(task *model.Task) error {
 
-	if err := r.DB.Create(task).Error; err != nil {
+	if err := r.DB.Save(task).Error; err != nil {
 		return errors.ErrSaveDataFailed
 	}
 	return nil
