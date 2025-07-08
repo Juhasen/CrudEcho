@@ -25,13 +25,11 @@ func main() {
 
 	log.Println("Connected to database")
 
-	// Run AutoMigrate
 	if err := db.AutoMigrate(&userModel.User{}, &taskModel.Task{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 	log.Println("Database migration completed successfully")
 
-	// User domain setup
 	userRepo := user.NewRepo(db)
 	userService := user.NewService(userRepo)
 	userHandler := user.NewHandler(userService)
@@ -39,7 +37,6 @@ func main() {
 
 	log.Println("User domain setup completed")
 
-	// Task domain setup
 	taskRepo := task.NewRepo(db)
 	taskService := task.NewService(taskRepo, userRepo)
 	taskHandler := task.NewHandler(taskService)

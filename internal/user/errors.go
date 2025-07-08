@@ -11,4 +11,5 @@ var (
 	ErrUserNameRequired  = errors.New("user name is required")
 	ErrUserEmailRequired = errors.New("user email is required")
 	ErrUserEmailNotFound = errors.New("user with given email not found")
+	ErrUserIDMismatch    = errors.New("user ID mismatch")
 )
