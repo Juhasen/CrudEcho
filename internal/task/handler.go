@@ -2,6 +2,7 @@ package task
 
 import (
 	"RestCrud/internal/task/dto"
+	errors2 "RestCrud/internal/task/errors"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -32,18 +33,18 @@ func (h *Handler) CreateTask(c echo.Context) error {
 
 	if err := h.Service.CreateTask(&task); err != nil {
 		switch {
-		case errors.Is(err, ErrAllArgumentsRequired):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrAllArgumentsRequired)
-		case errors.Is(err, ErrInvalidStatus):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidStatus)
-		case errors.Is(err, ErrInvalidDateFormat):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidDateFormat)
-		case errors.Is(err, ErrDueDateInPast):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrDueDateInPast)
-		case errors.Is(err, ErrTaskIdCannotBeEmpty):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
-		case errors.Is(err, ErrTaskWithGivenIdNotFound):
-			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, errors2.ErrAllArgumentsRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrAllArgumentsRequired)
+		case errors.Is(err, errors2.ErrInvalidStatus):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrInvalidStatus)
+		case errors.Is(err, errors2.ErrInvalidDateFormat):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrInvalidDateFormat)
+		case errors.Is(err, errors2.ErrDueDateInPast):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrDueDateInPast)
+		case errors.Is(err, errors2.ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, errors2.ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, errors2.ErrTaskWithGivenIdNotFound)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -56,12 +57,12 @@ func (h *Handler) GetTask(c echo.Context) error {
 	task, err := h.Service.GetTaskByID(id)
 	if err != nil {
 		switch {
-		case errors.Is(err, ErrTaskIdCannotBeEmpty):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
-		case errors.Is(err, ErrTaskWithGivenIdNotFound):
-			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
-		case errors.Is(err, ErrLoadDataFailed):
-			return utils.ReturnApiError(c, http.StatusInternalServerError, ErrLoadDataFailed)
+		case errors.Is(err, errors2.ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, errors2.ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, errors2.ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, errors2.ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, errors2.ErrLoadDataFailed)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -73,10 +74,10 @@ func (h *Handler) GetAllTasks(c echo.Context) error {
 	tasks, err := h.Service.GetAllTasks()
 	if err != nil {
 		switch {
-		case errors.Is(err, ErrLoadDataFailed):
-			return utils.ReturnApiError(c, http.StatusInternalServerError, ErrLoadDataFailed)
-		case errors.Is(err, ErrNoTasksFound):
-			return utils.ReturnApiError(c, http.StatusNotFound, ErrNoTasksFound)
+		case errors.Is(err, errors2.ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, errors2.ErrLoadDataFailed)
+		case errors.Is(err, errors2.ErrNoTasksFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, errors2.ErrNoTasksFound)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -93,16 +94,16 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 
 	if err := h.Service.UpdateTask(id, &task); err != nil {
 		switch {
-		case errors.Is(err, ErrTaskIdCannotBeEmpty):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
-		case errors.Is(err, ErrTaskWithGivenIdNotFound):
-			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
-		case errors.Is(err, ErrInvalidStatus):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidStatus)
-		case errors.Is(err, ErrInvalidDateFormat):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrInvalidDateFormat)
-		case errors.Is(err, ErrDueDateInPast):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrDueDateInPast)
+		case errors.Is(err, errors2.ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, errors2.ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, errors2.ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, errors2.ErrInvalidStatus):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrInvalidStatus)
+		case errors.Is(err, errors2.ErrInvalidDateFormat):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrInvalidDateFormat)
+		case errors.Is(err, errors2.ErrDueDateInPast):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrDueDateInPast)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -116,10 +117,10 @@ func (h *Handler) DeleteTask(c echo.Context) error {
 
 	if err := h.Service.DeleteTask(id); err != nil {
 		switch {
-		case errors.Is(err, ErrTaskIdCannotBeEmpty):
-			return utils.ReturnApiError(c, http.StatusBadRequest, ErrTaskIdCannotBeEmpty)
-		case errors.Is(err, ErrTaskWithGivenIdNotFound):
-			return utils.ReturnApiError(c, http.StatusNotFound, ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, errors2.ErrTaskIdCannotBeEmpty):
+			return utils.ReturnApiError(c, http.StatusBadRequest, errors2.ErrTaskIdCannotBeEmpty)
+		case errors.Is(err, errors2.ErrTaskWithGivenIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, errors2.ErrTaskWithGivenIdNotFound)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}

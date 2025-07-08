@@ -2,9 +2,10 @@ package task
 
 import (
 	"RestCrud/internal/task/dto"
+	"RestCrud/internal/task/errors"
+	"RestCrud/internal/task/model"
 	"RestCrud/internal/user"
 	"strings"
-	"time"
 )
 
 type Service struct {
@@ -18,12 +19,13 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 
 func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId == "" || task.Status == "" {
-		return ErrAllArgumentsRequired
+		return errors.ErrAllArgumentsRequired
 	}
 
-	// Check if the status is valid
-	if task.Status != string(StatusPending) && task.Status != string(StatusInProgress) && task.Status != string(StatusCompleted) && task.Status != string(StatusCancelled) {
-		return ErrInvalidStatus
+	task.Status = strings.ToLower(task.Status)
+
+	if err := task.Validate(); err != nil {
+		return err
 	}
 
 	// Check if the user ID exists
@@ -31,22 +33,12 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 		return err
 	}
 
-	// Parse due date
-	parsedDate, err := time.Parse("02/01/2006", task.DueDate)
-	if err != nil {
-		return ErrInvalidDateFormat
-	}
-
-	// Check if the date is in the future
-	if parsedDate.Before(time.Now()) {
-		return ErrDueDateInPast
-	}
 	return s.Repo.Save(dtoToTask(task))
 }
 
-func (s *Service) GetTaskByID(id string) (*Task, error) {
+func (s *Service) GetTaskByID(id string) (*model.Task, error) {
 	if id == "" {
-		return nil, ErrTaskIdCannotBeEmpty
+		return nil, errors.ErrTaskIdCannotBeEmpty
 	}
 	return s.Repo.FindByID(id)
 }
@@ -69,7 +61,7 @@ func (s *Service) GetAllTasks() (*map[string]dto.TaskResponseDTO, error) {
 
 func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	if id == "" {
-		return ErrTaskIdCannotBeEmpty
+		return errors.ErrTaskIdCannotBeEmpty
 	}
 
 	task, err := s.Repo.FindByID(id)
@@ -84,14 +76,8 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 		task.Description = taskRequest.Description
 	}
 	if taskRequest.DueDate != "" {
-		// Validate the due date format
-		parsedDate, err := time.Parse("02/01/2006", taskRequest.DueDate)
-		if err != nil {
-			return ErrInvalidDateFormat
-		}
-		// Check if the due date is in the past
-		if parsedDate.Before(time.Now()) {
-			return ErrDueDateInPast
+		if err := taskRequest.ValidateDate(); err != nil {
+			return err
 		}
 		task.DueDate = taskRequest.DueDate
 	}
@@ -106,10 +92,10 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 		// Normalize the status to lowercase
 		taskRequest.Status = strings.ToLower(taskRequest.Status)
 
-		// Check if the status is valid
-		if taskRequest.Status != string(StatusPending) && taskRequest.Status != string(StatusInProgress) && taskRequest.Status != string(StatusCompleted) && taskRequest.Status != string(StatusCancelled) {
-			return ErrInvalidStatus
+		if err := taskRequest.ValidateStatus(); err != nil {
+			return errors.ErrInvalidStatus
 		}
+
 		task.Status = taskRequest.Status
 	}
 
@@ -118,12 +104,12 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 
 func (s *Service) DeleteTask(id string) error {
 	if id == "" {
-		return ErrTaskIdCannotBeEmpty
+		return errors.ErrTaskIdCannotBeEmpty
 	}
 	return s.Repo.Delete(id)
 }
 
-func taskToDTO(t *Task) *dto.TaskResponseDTO {
+func taskToDTO(t *model.Task) *dto.TaskResponseDTO {
 	if t == nil {
 		return nil
 	}
@@ -136,11 +122,11 @@ func taskToDTO(t *Task) *dto.TaskResponseDTO {
 	}
 }
 
-func dtoToTask(t *dto.TaskRequestDTO) *Task {
+func dtoToTask(t *dto.TaskRequestDTO) *model.Task {
 	if t == nil {
 		return nil
 	}
-	return &Task{
+	return &model.Task{
 		Title:       t.Title,
 		Description: t.Description,
 		DueDate:     t.DueDate,

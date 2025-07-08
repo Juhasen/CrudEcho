@@ -2,13 +2,15 @@ package task
 
 import (
 	"RestCrud/internal/db"
+	"RestCrud/internal/task/errors"
+	"RestCrud/internal/task/model"
 	"github.com/google/uuid"
 )
 
 type Repository interface {
-	Save(task *Task) error
-	FindByID(id string) (*Task, error)
-	FindAll() (*map[string]Task, error)
+	Save(task *model.Task) error
+	FindByID(id string) (*model.Task, error)
+	FindAll() (*map[string]model.Task, error)
 	Delete(id string) error
 }
 
@@ -18,13 +20,13 @@ func NewRepo() *Repo {
 	return &Repo{}
 }
 
-func (r *Repo) Save(task *Task) error {
-	tasks := make(map[string]Task)
+func (r *Repo) Save(task *model.Task) error {
+	tasks := make(map[string]model.Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return ErrLoadDataFailed
+		return errors.ErrLoadDataFailed
 	}
 
-	taskToStore := Task{
+	taskToStore := model.Task{
 		ID:          uuid.New().String(),
 		Title:       task.Title,
 		Description: task.Description,
@@ -36,53 +38,53 @@ func (r *Repo) Save(task *Task) error {
 	tasks[taskToStore.ID] = taskToStore
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
-		return ErrSaveDataFailed
+		return errors.ErrSaveDataFailed
 	}
 
 	return nil
 }
 
-func (r *Repo) FindByID(id string) (*Task, error) {
-	tasks := make(map[string]Task)
+func (r *Repo) FindByID(id string) (*model.Task, error) {
+	tasks := make(map[string]model.Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return &Task{}, ErrLoadDataFailed
+		return &model.Task{}, errors.ErrLoadDataFailed
 	}
 
 	task, found := tasks[id]
 	if !found {
-		return &Task{}, ErrTaskWithGivenIdNotFound
+		return &model.Task{}, errors.ErrTaskWithGivenIdNotFound
 	}
 
 	return &task, nil
 }
 
-func (r *Repo) FindAll() (*map[string]Task, error) {
-	tasks := make(map[string]Task)
+func (r *Repo) FindAll() (*map[string]model.Task, error) {
+	tasks := make(map[string]model.Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return nil, ErrLoadDataFailed
+		return nil, errors.ErrLoadDataFailed
 	}
 
 	if len(tasks) == 0 {
-		return nil, ErrNoTasksFound
+		return nil, errors.ErrNoTasksFound
 	}
 
 	return &tasks, nil
 }
 
 func (r *Repo) Delete(id string) error {
-	tasks := make(map[string]Task)
+	tasks := make(map[string]model.Task)
 	if err := db.LoadData(db.TaskFile, &tasks); err != nil {
-		return ErrLoadDataFailed
+		return errors.ErrLoadDataFailed
 	}
 
 	if _, found := tasks[id]; !found {
-		return ErrTaskWithGivenIdNotFound
+		return errors.ErrTaskWithGivenIdNotFound
 	}
 
 	delete(tasks, id)
 
 	if err := db.SaveData(db.TaskFile, tasks); err != nil {
-		return ErrLoadDataFailed
+		return errors.ErrLoadDataFailed
 	}
 
 	return nil
