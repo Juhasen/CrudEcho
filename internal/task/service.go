@@ -1,10 +1,12 @@
 package task
 
 import (
+	"RestCrud/internal/task/common"
 	"RestCrud/internal/task/dto"
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
 	"RestCrud/internal/user"
+	"github.com/google/uuid"
 	"strings"
 )
 
@@ -18,45 +20,49 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 }
 
 func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
-	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId == "" || task.Status == "" {
+	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId.String() == "" || task.Status == "" {
 		return errors.ErrAllArgumentsRequired
 	}
 
-	task.Status = strings.ToLower(task.Status)
+	if len(task.UserId.String()) < 36 {
+		return errors.ErrInvalidUserId
+	}
+
+	task.Status = common.Status(strings.ToLower(string(task.Status)))
 
 	if err := task.Validate(); err != nil {
 		return err
 	}
 
 	// Check if the user ID exists
-	if _, err := s.UserRepo.FindByID(task.UserId); err != nil {
-		return err
+	if _, err := s.UserRepo.FindByID(task.UserId.String()); err != nil {
+		return errors.ErrUserWithGivenIdDoesNotExist
 	}
 
-	return s.Repo.Save(dtoToTask(task))
+	return s.Repo.Save(model.TaskFromDTO(task))
 }
 
-func (s *Service) GetTaskByID(id string) (*model.Task, error) {
+func (s *Service) GetTaskByID(id string) (*dto.TaskResponseDTO, error) {
 	if id == "" {
 		return nil, errors.ErrTaskIdCannotBeEmpty
 	}
-	return s.Repo.FindByID(id)
+	task, err := s.Repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return task.ToResponseDTO(), nil
 }
 
-func (s *Service) GetAllTasks() (*map[string]dto.TaskResponseDTO, error) {
+func (s *Service) GetAllTasks() ([]dto.TaskResponseDTO, error) {
 	tasks, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
-	var tasksDTO = make(map[string]dto.TaskResponseDTO)
-	for _, task := range *tasks {
-		dtoTask := taskToDTO(&task)
-		if dtoTask != nil {
-			tasksDTO[task.ID] = *dtoTask
-		}
+	var tasksDTO = make([]dto.TaskResponseDTO, 0, len(tasks))
+	for _, task := range tasks {
+		tasksDTO = append(tasksDTO, *task.ToResponseDTO())
 	}
-
-	return &tasksDTO, err
+	return tasksDTO, err
 }
 
 func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
@@ -79,18 +85,21 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 		if err := taskRequest.ValidateDate(); err != nil {
 			return err
 		}
-		task.DueDate = taskRequest.DueDate
+		task.DueDate, err = common.ParseDateStringToTime(taskRequest.DueDate)
+		if err != nil {
+			return errors.ErrInvalidDateFormat
+		}
 	}
-	if taskRequest.UserId != "" {
+	if taskRequest.UserId != uuid.Nil {
 		// Check if the user ID exists
-		if _, err := s.UserRepo.FindByID(taskRequest.UserId); err != nil {
+		if _, err := s.UserRepo.FindByID(taskRequest.UserId.String()); err != nil {
 			return err
 		}
-		task.UserId = taskRequest.UserId
+		task.UserID = taskRequest.UserId
 	}
 	if taskRequest.Status != "" {
 		// Normalize the status to lowercase
-		taskRequest.Status = strings.ToLower(taskRequest.Status)
+		taskRequest.Status = common.Status(strings.ToLower(string(taskRequest.Status)))
 
 		if err := taskRequest.ValidateStatus(); err != nil {
 			return errors.ErrInvalidStatus
@@ -98,6 +107,12 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 
 		task.Status = taskRequest.Status
 	}
+
+	parsedUUID, err := uuid.Parse(id)
+	if err != nil {
+		return errors.ErrInvalidUserId
+	}
+	taskRequest.UserId = parsedUUID
 
 	return s.Repo.Save(task)
 }
@@ -107,30 +122,4 @@ func (s *Service) DeleteTask(id string) error {
 		return errors.ErrTaskIdCannotBeEmpty
 	}
 	return s.Repo.Delete(id)
-}
-
-func taskToDTO(t *model.Task) *dto.TaskResponseDTO {
-	if t == nil {
-		return nil
-	}
-	return &dto.TaskResponseDTO{
-		Title:       t.Title,
-		Description: t.Description,
-		DueDate:     t.DueDate,
-		UserId:      t.UserId,
-		Status:      t.Status,
-	}
-}
-
-func dtoToTask(t *dto.TaskRequestDTO) *model.Task {
-	if t == nil {
-		return nil
-	}
-	return &model.Task{
-		Title:       t.Title,
-		Description: t.Description,
-		DueDate:     t.DueDate,
-		UserId:      t.UserId,
-		Status:      t.Status,
-	}
 }

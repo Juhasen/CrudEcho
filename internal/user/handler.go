@@ -25,7 +25,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
-	var userRequest dto.UserDTO
+	var userRequest dto.UserResponseDTO
 
 	if err := c.Bind(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
@@ -86,7 +86,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
 	}
 
-	var user dto.UserUpdateDTO
+	var user dto.UserRequestDTO
 
 	if err := c.Bind(&user); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
@@ -95,7 +95,16 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	user.ID = id
 
 	if err := h.Service.UpdateUser(id, &user); err != nil {
-		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, ErrUserIDRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserIDMismatch):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserAlreadyExists):
+			return utils.ReturnApiError(c, http.StatusConflict, err)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, user)
@@ -109,7 +118,16 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 	}
 
 	if err := h.Service.DeleteUser(id); err != nil {
-		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, ErrUserIDRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserIdNotFound):
+			return utils.ReturnApiError(c, http.StatusNotFound, err)
+		case errors.Is(err, ErrFailedToDeleteUser):
+			return utils.ReturnApiError(c, http.StatusConflict, err)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.NoContent(http.StatusNoContent)

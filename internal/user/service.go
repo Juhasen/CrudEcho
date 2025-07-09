@@ -2,6 +2,7 @@ package user
 
 import (
 	"RestCrud/internal/user/dto"
+	"RestCrud/internal/user/model"
 )
 
 type Service struct {
@@ -12,7 +13,7 @@ func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) CreateUser(user *dto.UserDTO) error {
+func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
 	if user.Name == "" {
 		return ErrUserNameRequired
 	}
@@ -21,49 +22,81 @@ func (s *Service) CreateUser(user *dto.UserDTO) error {
 		return ErrUserEmailRequired
 	}
 
-	if _, err := s.Repo.FindByEmail(user.Email); err == nil {
+	if user, _ := s.Repo.FindByEmail(user.Email); user != nil {
 		return ErrUserAlreadyExists
 	}
 
-	return s.Repo.Save(user)
+	return s.Repo.Save(dtoToUser(user))
 }
 
-func (s *Service) GetUserByID(id string) (*dto.UserDTO, error) {
+func (s *Service) GetUserByID(id string) (*dto.UserResponseDTO, error) {
 	user, err := s.Repo.FindByID(id)
 	return userToDTO(user), err
 }
 
-func (s *Service) GetAllUsers() (*map[string]dto.UserDTO, error) {
-
+func (s *Service) GetAllUsers() ([]dto.UserResponseDTO, error) {
 	users, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var usersDTO = make(map[string]dto.UserDTO)
-	for _, user := range *users {
-		dtoUser := userToDTO(&user)
-		if dtoUser != nil {
-			usersDTO[user.ID] = *dtoUser
-		}
+	var usersDTO = make([]dto.UserResponseDTO, 0, len(users))
+	for _, user := range users {
+		usersDTO = append(usersDTO, *userToDTO(&user))
 	}
 
-	return &usersDTO, err
+	return usersDTO, err
 }
 
-func (s *Service) UpdateUser(id string, user *dto.UserUpdateDTO) error {
-	return s.Repo.Update(id, user)
+func (s *Service) UpdateUser(id string, user *dto.UserRequestDTO) error {
+	if id == "" {
+		return ErrUserIDRequired
+	}
+	if user.ID != id {
+		return ErrUserIDMismatch
+	}
+
+	existingUser, err := s.Repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	if user.Email != "" {
+		if user, _ := s.Repo.FindByEmail(existingUser.Email); user != nil {
+			return ErrUserAlreadyExists
+		}
+		existingUser.Email = user.Email
+	}
+
+	if user.Name != "" {
+		existingUser.Name = user.Name
+	}
+
+	return s.Repo.Save(existingUser)
 }
 
 func (s *Service) DeleteUser(id string) error {
+	if id == "" {
+		return ErrUserIDRequired
+	}
 	return s.Repo.Delete(id)
 }
 
-func userToDTO(u *User) *dto.UserDTO {
+func userToDTO(u *model.User) *dto.UserResponseDTO {
 	if u == nil {
 		return nil
 	}
-	return &dto.UserDTO{
+	return &dto.UserResponseDTO{
+		Name:  u.Name,
+		Email: u.Email,
+	}
+}
+
+func dtoToUser(u *dto.UserResponseDTO) *model.User {
+	if u == nil {
+		return nil
+	}
+	return &model.User{
 		Name:  u.Name,
 		Email: u.Email,
 	}

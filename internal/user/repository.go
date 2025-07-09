@@ -1,132 +1,69 @@
 package user
 
 import (
-	"RestCrud/internal/db"
-	"RestCrud/internal/user/dto"
-	"github.com/google/uuid"
+	"RestCrud/internal/task/errors"
+	"RestCrud/internal/user/model"
+	"gorm.io/gorm"
 )
 
 type Repository interface {
-	Save(user *dto.UserDTO) error
-	FindByID(id string) (*User, error)
-	FindAll() (*map[string]User, error)
+	Save(user *model.User) error
+	FindByID(id string) (*model.User, error)
+	FindAll() ([]model.User, error)
 	Delete(id string) error
-	FindByEmail(email string) (*User, error)
-	Update(id string, user *dto.UserUpdateDTO) error
+	FindByEmail(email string) (*model.User, error)
 }
 
-type Repo struct{}
-
-func NewRepo() *Repo {
-	return &Repo{}
+type Repo struct {
+	DB *gorm.DB
 }
 
-func (r *Repo) Save(user *dto.UserDTO) error {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return ErrLoadDataFailed
-	}
+func NewRepo(db *gorm.DB) *Repo {
+	return &Repo{DB: db}
+}
 
-	userToStore := User{
-		ID:    uuid.New().String(),
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	users[userToStore.ID] = userToStore
-
-	if err := db.SaveData(db.UserFile, users); err != nil {
+func (r *Repo) Save(user *model.User) error {
+	if err := r.DB.Save(&user).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func (r *Repo) FindByID(id string) (*User, error) {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return nil, ErrLoadDataFailed
+func (r *Repo) FindByID(id string) (*model.User, error) {
+	var user model.User
+	if err := r.DB.First(&user, "id = ?", id).Error; err != nil {
+		return nil, err
 	}
-
-	user, found := users[id]
-	if !found {
-		return nil, ErrUserIdNotFound
-	}
-
 	return &user, nil
 }
 
-func (r *Repo) FindAll() (*map[string]User, error) {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return nil, ErrLoadDataFailed
+func (r *Repo) FindAll() ([]model.User, error) {
+	var users []model.User
+	if err := r.DB.Find(&users).Error; err != nil {
+		return nil, err
 	}
-
 	if len(users) == 0 {
 		return nil, ErrNoUsersFound
 	}
-
-	return &users, nil
+	return users, nil
 }
 
 func (r *Repo) Delete(id string) error {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return err
+	result := r.DB.Delete(&model.User{}, "id = ?", id)
+	if result.Error != nil {
+		return ErrFailedToDeleteUser
 	}
-
-	if _, found := users[id]; !found {
-		return ErrUserIdNotFound
+	if result.RowsAffected == 0 {
+		return errors.ErrTaskWithGivenIdNotFound
 	}
-
-	delete(users, id)
-
-	if err := db.SaveData(db.UserFile, users); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (r *Repo) Update(id string, userRequest *dto.UserUpdateDTO) error {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return ErrLoadDataFailed
+func (r *Repo) FindByEmail(email string) (*model.User, error) {
+	var user model.User
+	if err := r.DB.First(&user, "email = ?", email).Error; err != nil {
+		return nil, ErrUserEmailNotFound
 	}
 
-	user, err := r.FindByID(id)
-	if err != nil {
-		return err
-	}
-
-	if userRequest.Name != nil {
-		user.Name = *userRequest.Name
-	}
-
-	if userRequest.Email != nil {
-		user.Email = *userRequest.Email
-	}
-
-	users[id] = *user
-
-	if err := db.SaveData(db.UserFile, users); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *Repo) FindByEmail(email string) (*User, error) {
-	users := make(map[string]User)
-	if err := db.LoadData(db.UserFile, &users); err != nil {
-		return nil, ErrLoadDataFailed
-	}
-
-	for _, user := range users {
-		if user.Email == email {
-			return &user, nil
-		}
-	}
-
-	return nil, ErrUserEmailNotFound
+	return &user, nil
 }

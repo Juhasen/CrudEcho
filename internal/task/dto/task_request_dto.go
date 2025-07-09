@@ -1,24 +1,25 @@
 package dto
 
 import (
+	"RestCrud/internal/task/common"
 	"RestCrud/internal/task/errors"
-	"RestCrud/internal/task/model"
+	"github.com/google/uuid"
 	"time"
 )
 
 type TaskRequestDTO struct {
-	Title       string `json:"title,omitempty"`
-	Description string `json:"description,omitempty"`
-	DueDate     string `json:"due_date,omitempty"`
-	UserId      string `json:"user_id,omitempty"`
-	Status      string `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
+	Title       string        `json:"title,omitempty"`
+	Description string        `json:"description,omitempty"`
+	DueDate     string        `json:"due_date,omitempty"`
+	UserId      uuid.UUID     `json:"user_id,omitempty"`
+	Status      common.Status `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
 }
 
 func (t *TaskRequestDTO) ValidateStatus() error {
-	if t.Status != string(model.StatusPending) &&
-		t.Status != string(model.StatusInProgress) &&
-		t.Status != string(model.StatusCompleted) &&
-		t.Status != string(model.StatusCancelled) {
+	if t.Status != common.Pending &&
+		t.Status != common.InProgress &&
+		t.Status != common.Completed &&
+		t.Status != common.Cancelled {
 		return errors.ErrInvalidStatus
 	}
 	return nil

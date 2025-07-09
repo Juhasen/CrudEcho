@@ -1,9 +1,14 @@
 package dto
 
+import (
+	"RestCrud/internal/task/common"
+	"github.com/google/uuid"
+)
+
 type TaskResponseDTO struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	DueDate     string `json:"due_date"`
-	UserId      string `json:"user_id"`
-	Status      string `json:"status" validate:"oneof=pending in_progress completed cancelled"`
+	Title       string        `json:"title, omitempty"`
+	Description string        `json:"description, omitempty"`
+	DueDate     string        `json:"due_date, omitempty"`
+	UserId      uuid.UUID     `json:"user_id, omitempty"`
+	Status      common.Status `json:"status" validate:"omitempty, oneof=pending in_progress completed cancelled"`
 }
