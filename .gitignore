@@ -1,2 +1,4 @@
 .idea
 cmd/database/data/
+.envDB
+.envADMIN

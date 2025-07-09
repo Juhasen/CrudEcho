@@ -17,7 +17,7 @@ func main() {
 	e := echo.New()
 
 	// Initialize DB connection
-	dsn := "host=localhost user=postgres password=123 dbname=RestCrud port=5432 sslmode=disable"
+	dsn := "host=localhost user=postgres password=123 dbname=restcrud port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
