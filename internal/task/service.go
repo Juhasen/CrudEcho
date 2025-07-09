@@ -24,7 +24,7 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 		return errors.ErrAllArgumentsRequired
 	}
 
-	if len(task.UserId.String()) < 36 {
+	if _, err := uuid.Parse(task.UserId.String()); err != nil {
 		return errors.ErrInvalidUserId
 	}
 
@@ -45,6 +45,9 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 func (s *Service) GetTaskByID(id string) (*dto.TaskResponseDTO, error) {
 	if id == "" {
 		return nil, errors.ErrTaskIdCannotBeEmpty
+	}
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, errors.ErrIdIsNotValid
 	}
 	task, err := s.Repo.FindByID(id)
 	if err != nil {
@@ -68,6 +71,18 @@ func (s *Service) GetAllTasks() ([]dto.TaskResponseDTO, error) {
 func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	if id == "" {
 		return errors.ErrTaskIdCannotBeEmpty
+	}
+
+	if _, err := uuid.Parse(id); err != nil {
+		return errors.ErrIdIsNotValid
+	}
+
+	if taskRequest.Status == "" &&
+		taskRequest.Title == "" &&
+		taskRequest.Description == "" &&
+		taskRequest.DueDate == "" &&
+		taskRequest.UserId == uuid.Nil {
+		return errors.ErrAtLeastOneFieldRequired
 	}
 
 	task, err := s.Repo.FindByID(id)
@@ -120,6 +135,9 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 func (s *Service) DeleteTask(id string) error {
 	if id == "" {
 		return errors.ErrTaskIdCannotBeEmpty
+	}
+	if _, err := uuid.Parse(id); err != nil {
+		return errors.ErrIdIsNotValid
 	}
 	return s.Repo.Delete(id)
 }

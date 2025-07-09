@@ -1,7 +1,6 @@
 package user
 
 import (
-	"RestCrud/internal/task/errors"
 	"RestCrud/internal/user/model"
 	"gorm.io/gorm"
 )
@@ -54,7 +53,7 @@ func (r *Repo) Delete(id string) error {
 		return ErrFailedToDeleteUser
 	}
 	if result.RowsAffected == 0 {
-		return errors.ErrTaskWithGivenIdNotFound
+		return ErrUserWithGivenIdDoesNotExist
 	}
 	return nil
 }

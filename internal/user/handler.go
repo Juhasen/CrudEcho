@@ -32,7 +32,22 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	}
 
 	if err := h.Service.CreateUser(&userRequest); err != nil {
-		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		switch {
+		case errors.Is(err, ErrUserNameRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserEmailRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserEmailInvalid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrUserAlreadyExists):
+			return utils.ReturnApiError(c, http.StatusConflict, err)
+		case errors.Is(err, ErrUserIDRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrLoadDataFailed):
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusCreated, userRequest)
@@ -54,9 +69,11 @@ func (h *Handler) GetUser(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		case errors.Is(err, ErrLoadDataFailed):
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
+		case errors.Is(err, ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		default:
+			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
-
-		return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, user)
 }
@@ -102,6 +119,10 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		case errors.Is(err, ErrUserAlreadyExists):
 			return utils.ReturnApiError(c, http.StatusConflict, err)
+		case errors.Is(err, ErrAtLeastOneFieldRequired):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -125,6 +146,10 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusNotFound, err)
 		case errors.Is(err, ErrFailedToDeleteUser):
 			return utils.ReturnApiError(c, http.StatusConflict, err)
+		case errors.Is(err, ErrUserWithGivenIdDoesNotExist):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+		case errors.Is(err, ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}

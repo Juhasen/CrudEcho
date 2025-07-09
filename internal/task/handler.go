@@ -65,6 +65,8 @@ func (h *Handler) GetTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusNotFound, taskErr.ErrTaskWithGivenIdNotFound)
 		case errors.Is(err, taskErr.ErrLoadDataFailed):
 			return utils.ReturnApiError(c, http.StatusInternalServerError, taskErr.ErrLoadDataFailed)
+		case errors.Is(err, taskErr.ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrIdIsNotValid)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -106,6 +108,8 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrInvalidDateFormat)
 		case errors.Is(err, taskErr.ErrDueDateInPast):
 			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrDueDateInPast)
+		case errors.Is(err, taskErr.ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrIdIsNotValid)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -123,6 +127,8 @@ func (h *Handler) DeleteTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrTaskIdCannotBeEmpty)
 		case errors.Is(err, taskErr.ErrTaskWithGivenIdNotFound):
 			return utils.ReturnApiError(c, http.StatusNotFound, taskErr.ErrTaskWithGivenIdNotFound)
+		case errors.Is(err, taskErr.ErrIdIsNotValid):
+			return utils.ReturnApiError(c, http.StatusBadRequest, taskErr.ErrIdIsNotValid)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}

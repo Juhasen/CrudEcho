@@ -15,4 +15,6 @@ var (
 	ErrSaveDataFailed              = errors.New("failed to save data")
 	ErrUserWithGivenIdDoesNotExist = errors.New("user with given ID does not exist")
 	ErrInvalidUserId               = errors.New("invalid user ID, must be a valid UUID")
+	ErrIdIsNotValid                = errors.New("ID is not valid UUID format")
+	ErrAtLeastOneFieldRequired     = errors.New("at least one field (status, title, description, due date, user ID) is required for update")
 )

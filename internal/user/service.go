@@ -3,6 +3,8 @@ package user
 import (
 	"RestCrud/internal/user/dto"
 	"RestCrud/internal/user/model"
+	"github.com/google/uuid"
+	"strings"
 )
 
 type Service struct {
@@ -22,6 +24,10 @@ func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
 		return ErrUserEmailRequired
 	}
 
+	if !strings.Contains(user.Email, "@") {
+		return ErrUserEmailInvalid
+	}
+
 	if user, _ := s.Repo.FindByEmail(user.Email); user != nil {
 		return ErrUserAlreadyExists
 	}
@@ -30,6 +36,14 @@ func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
 }
 
 func (s *Service) GetUserByID(id string) (*dto.UserResponseDTO, error) {
+	if id == "" {
+		return nil, ErrUserIDRequired
+	}
+
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, ErrIdIsNotValid
+	}
+
 	user, err := s.Repo.FindByID(id)
 	return userToDTO(user), err
 }
@@ -56,6 +70,14 @@ func (s *Service) UpdateUser(id string, user *dto.UserRequestDTO) error {
 		return ErrUserIDMismatch
 	}
 
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrIdIsNotValid
+	}
+
+	if user.Name == "" && user.Email == "" {
+		return ErrAtLeastOneFieldRequired
+	}
+
 	existingUser, err := s.Repo.FindByID(id)
 	if err != nil {
 		return err
@@ -79,6 +101,11 @@ func (s *Service) DeleteUser(id string) error {
 	if id == "" {
 		return ErrUserIDRequired
 	}
+
+	if _, err := uuid.Parse(id); err != nil {
+		return ErrIdIsNotValid
+	}
+
 	return s.Repo.Delete(id)
 }
 
