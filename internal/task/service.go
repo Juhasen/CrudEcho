@@ -6,6 +6,7 @@ import (
 	"RestCrud/internal/task/errors"
 	"RestCrud/internal/task/model"
 	"RestCrud/internal/user"
+	"github.com/google/uuid"
 	"strings"
 )
 
@@ -41,11 +42,15 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 	return s.Repo.Save(model.TaskFromDTO(task))
 }
 
-func (s *Service) GetTaskByID(id string) (*model.Task, error) {
+func (s *Service) GetTaskByID(id string) (*dto.TaskResponseDTO, error) {
 	if id == "" {
 		return nil, errors.ErrTaskIdCannotBeEmpty
 	}
-	return s.Repo.FindByID(id)
+	task, err := s.Repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return task.ToResponseDTO(), nil
 }
 
 func (s *Service) GetAllTasks() ([]dto.TaskResponseDTO, error) {
@@ -85,7 +90,7 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 			return errors.ErrInvalidDateFormat
 		}
 	}
-	if taskRequest.UserId.String() != "" {
+	if taskRequest.UserId != uuid.Nil {
 		// Check if the user ID exists
 		if _, err := s.UserRepo.FindByID(taskRequest.UserId.String()); err != nil {
 			return err
@@ -102,6 +107,12 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 
 		task.Status = taskRequest.Status
 	}
+
+	parsedUUID, err := uuid.Parse(id)
+	if err != nil {
+		return errors.ErrInvalidUserId
+	}
+	taskRequest.UserId = parsedUUID
 
 	return s.Repo.Save(task)
 }

@@ -32,10 +32,7 @@ func (r *Repo) Save(task *model.Task) error {
 func (r *Repo) FindByID(id string) (*model.Task, error) {
 	var task model.Task
 	if err := r.DB.First(&task, "id = ?", id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errors.ErrTaskWithGivenIdNotFound
-		}
-		return nil, errors.ErrLoadDataFailed
+		return nil, errors.ErrTaskWithGivenIdNotFound
 	}
 	return &task, nil
 }
