@@ -53,7 +53,7 @@ func (r *Repo) Delete(id string) error {
 		return ErrFailedToDeleteUser
 	}
 	if result.RowsAffected == 0 {
-		return ErrUserWithGivenIdDoesNotExist
+		return ErrDeleteUserNotFound
 	}
 	return nil
 }

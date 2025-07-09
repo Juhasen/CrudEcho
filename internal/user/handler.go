@@ -70,7 +70,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 		case errors.Is(err, ErrLoadDataFailed):
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		case errors.Is(err, ErrIdIsNotValid):
-			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+			return c.NoContent(http.StatusBadRequest)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -122,7 +122,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		case errors.Is(err, ErrAtLeastOneFieldRequired):
 			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		case errors.Is(err, ErrIdIsNotValid):
-			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+			return c.NoContent(http.StatusBadRequest)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
@@ -146,10 +146,10 @@ func (h *Handler) DeleteUser(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusNotFound, err)
 		case errors.Is(err, ErrFailedToDeleteUser):
 			return utils.ReturnApiError(c, http.StatusConflict, err)
-		case errors.Is(err, ErrUserWithGivenIdDoesNotExist):
+		case errors.Is(err, ErrDeleteUserNotFound):
 			return utils.ReturnApiError(c, http.StatusBadRequest, err)
 		case errors.Is(err, ErrIdIsNotValid):
-			return utils.ReturnApiError(c, http.StatusBadRequest, err)
+			return c.NoContent(http.StatusBadRequest)
 		default:
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
