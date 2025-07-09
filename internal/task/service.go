@@ -34,7 +34,6 @@ func (s *Service) CreateTask(task *dto.TaskRequestDTO) error {
 		return err
 	}
 
-	// Check if the user ID exists
 	if _, err := s.UserRepo.FindByID(task.UserId.String()); err != nil {
 		return errors.ErrUserWithGivenIdDoesNotExist
 	}
@@ -93,9 +92,11 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 	if taskRequest.Title != "" {
 		task.Title = taskRequest.Title
 	}
+
 	if taskRequest.Description != "" {
 		task.Description = taskRequest.Description
 	}
+
 	if taskRequest.DueDate != "" {
 		if err := taskRequest.ValidateDate(); err != nil {
 			return err
@@ -105,13 +106,16 @@ func (s *Service) UpdateTask(id string, taskRequest *dto.TaskRequestDTO) error {
 			return errors.ErrInvalidDateFormat
 		}
 	}
+
 	if taskRequest.UserId != uuid.Nil {
 		// Check if the user ID exists
 		if _, err := s.UserRepo.FindByID(taskRequest.UserId.String()); err != nil {
 			return err
 		}
+
 		task.UserID = taskRequest.UserId
 	}
+
 	if taskRequest.Status != "" {
 		// Normalize the status to lowercase
 		taskRequest.Status = common.Status(strings.ToLower(string(taskRequest.Status)))

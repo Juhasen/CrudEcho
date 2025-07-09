@@ -32,7 +32,7 @@ func (t *TaskRequestDTO) ValidateDate() error {
 		return errors.ErrInvalidDateFormat
 	}
 
-	// Check if the date is in the future
+	// Check if the date is not in the past
 	if parsedDate.Before(time.Now()) {
 		return errors.ErrDueDateInPast
 	}
@@ -41,11 +41,9 @@ func (t *TaskRequestDTO) ValidateDate() error {
 }
 
 func (t *TaskRequestDTO) Validate() error {
-
 	if err := t.ValidateDate(); err != nil {
 		return err
 	}
-
 	if err := t.ValidateStatus(); err != nil {
 		return err
 	}

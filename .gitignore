@@ -2,3 +2,4 @@
 cmd/database/data/
 .envDB
 .envADMIN
+.env

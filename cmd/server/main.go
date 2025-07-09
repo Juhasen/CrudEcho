@@ -4,11 +4,13 @@ import (
 	"RestCrud/internal/task"
 	taskModel "RestCrud/internal/task/model"
 	"RestCrud/internal/user"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
 	_ "net/http"
+	"os"
 
 	userModel "RestCrud/internal/user/model"
 )
@@ -16,8 +18,16 @@ import (
 func main() {
 	e := echo.New()
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found")
+	}
+	// Get connection string from environment variable
+	dsn := os.Getenv("DATABASE_DSN")
+	if dsn == "" {
+		log.Fatal("DATABASE_DSN environment variable is not set")
+	}
 	// Initialize DB connection
-	dsn := "host=localhost user=postgres password=123 dbname=restcrud port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
