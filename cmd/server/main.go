@@ -1,8 +1,8 @@
 package main
 
 import (
+	"RestCrud/internal/model"
 	"RestCrud/internal/task"
-	taskModel "RestCrud/internal/task/model"
 	"RestCrud/internal/user"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
@@ -11,8 +11,6 @@ import (
 	"log"
 	_ "net/http"
 	"os"
-
-	userModel "RestCrud/internal/user/model"
 )
 
 func main() {
@@ -35,7 +33,7 @@ func main() {
 
 	log.Println("Connected to database")
 
-	if err := db.AutoMigrate(&userModel.User{}, &taskModel.Task{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Task{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 	log.Println("Database migration completed successfully")

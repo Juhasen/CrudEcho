@@ -1,8 +1,7 @@
 package main
 
 import (
-	taskModel "RestCrud/internal/task/model"
-	userModel "RestCrud/internal/user/model"
+	taskModel "RestCrud/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -16,7 +15,7 @@ func main() {
 	}
 
 	// Auto-migrate tables
-	if err := db.AutoMigrate(&userModel.User{}, &taskModel.Task{}); err != nil {
+	if err := db.AutoMigrate(&taskModel.User{}, &taskModel.Task{}); err != nil {
 		log.Fatal("migration failed:", err)
 	}
 

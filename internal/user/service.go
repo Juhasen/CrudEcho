@@ -1,8 +1,6 @@
 package user
 
 import (
-	"RestCrud/internal/user/dto"
-	"RestCrud/internal/user/model"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -15,7 +13,7 @@ func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
+func (s *Service) CreateUser(user *ResponseDTO) error {
 	if user.Name == "" {
 		return ErrUserNameRequired
 	}
@@ -35,7 +33,7 @@ func (s *Service) CreateUser(user *dto.UserResponseDTO) error {
 	return s.Repo.Save(dtoToUser(user))
 }
 
-func (s *Service) GetUserByID(id string) (*dto.UserResponseDTO, error) {
+func (s *Service) GetUserByID(id string) (*ResponseDTO, error) {
 	if id == "" {
 		return nil, ErrUserIDRequired
 	}
@@ -48,13 +46,13 @@ func (s *Service) GetUserByID(id string) (*dto.UserResponseDTO, error) {
 	return userToDTO(user), err
 }
 
-func (s *Service) GetAllUsers() ([]dto.UserResponseDTO, error) {
+func (s *Service) GetAllUsers() ([]ResponseDTO, error) {
 	users, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var usersDTO = make([]dto.UserResponseDTO, 0, len(users))
+	var usersDTO = make([]ResponseDTO, 0, len(users))
 	for _, user := range users {
 		usersDTO = append(usersDTO, *userToDTO(&user))
 	}
@@ -62,7 +60,7 @@ func (s *Service) GetAllUsers() ([]dto.UserResponseDTO, error) {
 	return usersDTO, err
 }
 
-func (s *Service) UpdateUser(id string, user *dto.UserRequestDTO) error {
+func (s *Service) UpdateUser(id string, user *RequestDTO) error {
 	if id == "" {
 		return ErrUserIDRequired
 	}
@@ -107,24 +105,4 @@ func (s *Service) DeleteUser(id string) error {
 	}
 
 	return s.Repo.Delete(id)
-}
-
-func userToDTO(u *model.User) *dto.UserResponseDTO {
-	if u == nil {
-		return nil
-	}
-	return &dto.UserResponseDTO{
-		Name:  u.Name,
-		Email: u.Email,
-	}
-}
-
-func dtoToUser(u *dto.UserResponseDTO) *model.User {
-	if u == nil {
-		return nil
-	}
-	return &model.User{
-		Name:  u.Name,
-		Email: u.Email,
-	}
 }

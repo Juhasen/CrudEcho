@@ -1,7 +1,6 @@
 package user
 
 import (
-	"RestCrud/internal/user/dto"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -25,7 +24,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) CreateUser(c echo.Context) error {
-	var userRequest dto.UserResponseDTO
+	var userRequest ResponseDTO
 
 	if err := c.Bind(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
@@ -103,7 +102,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
 	}
 
-	var user dto.UserRequestDTO
+	var user RequestDTO
 
 	if err := c.Bind(&user); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)

@@ -1,7 +1,7 @@
 package user
 
 import (
-	"RestCrud/internal/user/model"
+	"RestCrud/internal/model"
 	"gorm.io/gorm"
 )
 
