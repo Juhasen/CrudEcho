@@ -1,9 +1,12 @@
 package task
 
 import (
+	"RestCrud/internal/model"
 	"RestCrud/internal/user"
+	"RestCrud/kafka"
 	generated "RestCrud/openapi"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type Service struct {
@@ -15,24 +18,34 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 	return &Service{Repo: repo, UserRepo: userRepo}
 }
 
-func (s *Service) CreateTask(task *generated.TaskRequest) error {
+func (s *Service) CreateTask(task *generated.TaskRequest) (*model.Task, error) {
 	if task.Title == "" || task.Description == "" || task.UserId.String() == "" {
-		return ErrAllArgumentsRequired
+		return nil, ErrAllArgumentsRequired
 	}
 
 	if _, err := uuid.Parse(task.UserId.String()); err != nil {
-		return ErrInvalidUserId
+		return nil, ErrInvalidUserId
 	}
 
 	if err := Validate(task); err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, err := s.UserRepo.FindByID(task.UserId.String()); err != nil {
-		return ErrUserWithGivenIdDoesNotExist
+		return nil, ErrUserWithGivenIdDoesNotExist
 	}
 
-	return s.Repo.Save(TaskFromDTO(task))
+	savedTask := TaskFromDTO(task)
+
+	if err := s.Repo.Save(savedTask); err != nil {
+		return nil, err
+	}
+
+	if err := kafka.ProduceTodoEvent(savedTask, kafka.CREATE, savedTask.ID.String()); err != nil {
+		return nil, errors.Wrap(err, "kafka failed to produce message")
+	}
+
+	return savedTask, nil
 }
 
 func (s *Service) GetTaskByID(id string) (*generated.TaskResponse, error) {
@@ -118,6 +131,9 @@ func (s *Service) UpdateTask(id string, taskRequest *generated.TaskRequest) erro
 	}
 	taskRequest.UserId = parsedUUID
 
+	if err := kafka.ProduceTodoEvent(task, kafka.EDIT, task.ID.String()); err != nil {
+		return errors.Wrap(err, "kafka failed to produce message")
+	}
 	return s.Repo.Save(task)
 }
 

@@ -1,8 +1,11 @@
 package user
 
 import (
+	"RestCrud/internal/model"
+	"RestCrud/kafka"
 	generated "RestCrud/openapi"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"strings"
 )
 
@@ -14,24 +17,34 @@ func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) CreateUser(user *generated.UserResponse) error {
+func (s *Service) CreateUser(user *generated.UserResponse) (*model.User, error) {
 	if user.Name == "" {
-		return ErrUserNameRequired
+		return nil, ErrUserNameRequired
 	}
 
 	if user.Email == "" {
-		return ErrUserEmailRequired
+		return nil, ErrUserEmailRequired
 	}
 
 	if !strings.Contains(string(user.Email), "@") {
-		return ErrUserEmailInvalid
+		return nil, ErrUserEmailInvalid
 	}
 
 	if user, _ := s.Repo.FindByEmail(string(user.Email)); user != nil {
-		return ErrUserAlreadyExists
+		return nil, ErrUserAlreadyExists
 	}
 
-	return s.Repo.Save(dtoToUser(user))
+	savedUser := dtoToUser(user)
+
+	if err := s.Repo.Save(savedUser); err != nil {
+		return nil, err
+	}
+
+	if err := kafka.ProduceTodoEvent(savedUser, kafka.CREATE, savedUser.ID.String()); err != nil {
+		return nil, errors.Wrap(err, "kafka failed to produce message")
+	}
+
+	return savedUser, nil
 }
 
 func (s *Service) GetUserByID(id string) (*generated.UserResponse, error) {
@@ -80,7 +93,7 @@ func (s *Service) UpdateUser(id string, user *generated.UserRequest) error {
 	}
 
 	if user.Email != "" {
-		if user, _ := s.Repo.FindByEmail(existingUser.Email); user != nil {
+		if user, _ := s.Repo.FindByEmail(string(user.Email)); user != nil {
 			return ErrUserAlreadyExists
 		}
 		existingUser.Email = string(user.Email)
@@ -88,6 +101,10 @@ func (s *Service) UpdateUser(id string, user *generated.UserRequest) error {
 
 	if user.Name != "" {
 		existingUser.Name = user.Name
+	}
+
+	if err := kafka.ProduceTodoEvent(existingUser, kafka.EDIT, existingUser.ID.String()); err != nil {
+		return errors.Wrap(err, "kafka failed to produce message")
 	}
 
 	return s.Repo.Save(existingUser)

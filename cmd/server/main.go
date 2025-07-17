@@ -5,9 +5,11 @@ import (
 	"RestCrud/internal/model"
 	"RestCrud/internal/task"
 	"RestCrud/internal/user"
+	"RestCrud/kafka"
 	"RestCrud/openapi"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -50,6 +52,11 @@ func main() {
 	taskHandler := task.NewHandler(taskService)
 
 	log.Println("Task domain setup completed")
+
+	if err = kafka.InitClient(); err != nil {
+		log.Fatalln(errors.Wrap(err, "failed to init kafka client"))
+	}
+	log.Println("Kafka client initialized")
 
 	apiGroup := e.Group("/api")
 

@@ -22,7 +22,8 @@ func (h *TaskHandler) CreateTask(c echo.Context) error {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
-	if err := h.Service.CreateTask(&task); err != nil {
+	savedTask, err := h.Service.CreateTask(&task)
+	if err != nil {
 		switch {
 		case errors.Is(err, ErrAllArgumentsRequired):
 			return utils.ReturnApiError(c, http.StatusBadRequest, ErrAllArgumentsRequired)
@@ -42,7 +43,8 @@ func (h *TaskHandler) CreateTask(c echo.Context) error {
 			return utils.ReturnApiError(c, http.StatusInternalServerError, err)
 		}
 	}
-	return c.JSON(http.StatusCreated, task)
+
+	return c.JSON(http.StatusCreated, ToResponseDTO(savedTask))
 }
 
 func (h *TaskHandler) GetTaskById(c echo.Context) error {
