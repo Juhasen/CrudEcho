@@ -43,6 +43,7 @@ func Validate(t *generated.TaskRequest) error {
 
 func ToResponseDTO(t *model.Task) *generated.TaskResponse {
 	return &generated.TaskResponse{
+		Id:          t.ID,
 		Title:       t.Title,
 		Description: t.Description,
 		DueDate:     t.DueDate,

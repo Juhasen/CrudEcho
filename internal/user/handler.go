@@ -23,7 +23,8 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
 
-	if err := h.Service.CreateUser(&userRequest); err != nil {
+	savedUser, err := h.Service.CreateUser(&userRequest)
+	if err != nil {
 		switch {
 		case errors.Is(err, ErrUserNameRequired):
 			return utils.ReturnApiError(c, http.StatusBadRequest, err)
@@ -42,7 +43,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		}
 	}
 
-	return c.JSON(http.StatusCreated, userRequest)
+	return c.JSON(http.StatusCreated, userToDTO(savedUser))
 }
 
 func (h *UserHandler) GetUserById(c echo.Context) error {
