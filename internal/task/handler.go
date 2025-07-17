@@ -1,30 +1,23 @@
 package task
 
 import (
+	generated "RestCrud/openapi"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func RegisterRoutes(e *echo.Echo, h *Handler) {
-	e.POST("/api/tasks", h.CreateTask)
-	e.GET("/api/tasks/:id", h.GetTask)
-	e.GET("/api/tasks", h.GetAllTasks)
-	e.PUT("/api/tasks/:id", h.UpdateTask)
-	e.DELETE("/api/tasks/:id", h.DeleteTask)
-}
-
-type Handler struct {
+type TaskHandler struct {
 	Service *Service
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{Service: service}
+func NewHandler(service *Service) *TaskHandler {
+	return &TaskHandler{Service: service}
 }
 
-func (h *Handler) CreateTask(c echo.Context) error {
-	var task RequestDTO
+func (h *TaskHandler) CreateTask(c echo.Context) error {
+	var task generated.TaskRequest
 	if err := c.Bind(&task); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
@@ -52,7 +45,7 @@ func (h *Handler) CreateTask(c echo.Context) error {
 	return c.JSON(http.StatusCreated, task)
 }
 
-func (h *Handler) GetTask(c echo.Context) error {
+func (h *TaskHandler) GetTaskById(c echo.Context) error {
 	id := c.Param("id")
 	task, err := h.Service.GetTaskByID(id)
 	if err != nil {
@@ -72,7 +65,7 @@ func (h *Handler) GetTask(c echo.Context) error {
 	return c.JSON(http.StatusOK, task)
 }
 
-func (h *Handler) GetAllTasks(c echo.Context) error {
+func (h *TaskHandler) GetAllTasks(c echo.Context) error {
 	tasks, err := h.Service.GetAllTasks()
 	if err != nil {
 		switch {
@@ -87,9 +80,9 @@ func (h *Handler) GetAllTasks(c echo.Context) error {
 	return c.JSON(http.StatusOK, tasks)
 }
 
-func (h *Handler) UpdateTask(c echo.Context) error {
+func (h *TaskHandler) UpdateTask(c echo.Context) error {
 	id := c.Param("id")
-	var task RequestDTO
+	var task generated.TaskRequest
 	if err := c.Bind(&task); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
@@ -116,9 +109,7 @@ func (h *Handler) UpdateTask(c echo.Context) error {
 	return c.JSON(http.StatusOK, task)
 }
 
-func (h *Handler) DeleteTask(c echo.Context) error {
-	id := c.Param("id")
-
+func (h *TaskHandler) DeleteTask(c echo.Context, id string) error {
 	if err := h.Service.DeleteTask(id); err != nil {
 		switch {
 		case errors.Is(err, ErrTaskIdCannotBeEmpty):

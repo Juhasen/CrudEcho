@@ -1,34 +1,28 @@
 package user
 
-import "RestCrud/internal/model"
+import (
+	"RestCrud/internal/model"
+	generated "RestCrud/openapi"
+	"github.com/oapi-codegen/runtime/types"
+)
 
-type RequestDTO struct {
-	ID    string `json:"id,omitempty"`
-	Name  string `json:"name,omitempty"`
-	Email string `json:"email,omitempty"`
-}
-
-type ResponseDTO struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
-func userToDTO(u *model.User) *ResponseDTO {
+func userToDTO(u *model.User) *generated.UserResponse {
 	if u == nil {
 		return nil
 	}
-	return &ResponseDTO{
+	return &generated.UserResponse{
+		Id:    u.ID,
 		Name:  u.Name,
-		Email: u.Email,
+		Email: types.Email(u.Email),
 	}
 }
 
-func dtoToUser(u *ResponseDTO) *model.User {
+func dtoToUser(u *generated.UserResponse) *model.User {
 	if u == nil {
 		return nil
 	}
 	return &model.User{
 		Name:  u.Name,
-		Email: u.Email,
+		Email: string(u.Email),
 	}
 }

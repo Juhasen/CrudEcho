@@ -1,6 +1,7 @@
 package user
 
 import (
+	generated "RestCrud/openapi"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -13,7 +14,7 @@ func NewService(repo Repository) *Service {
 	return &Service{Repo: repo}
 }
 
-func (s *Service) CreateUser(user *ResponseDTO) error {
+func (s *Service) CreateUser(user *generated.UserResponse) error {
 	if user.Name == "" {
 		return ErrUserNameRequired
 	}
@@ -22,18 +23,18 @@ func (s *Service) CreateUser(user *ResponseDTO) error {
 		return ErrUserEmailRequired
 	}
 
-	if !strings.Contains(user.Email, "@") {
+	if !strings.Contains(string(user.Email), "@") {
 		return ErrUserEmailInvalid
 	}
 
-	if user, _ := s.Repo.FindByEmail(user.Email); user != nil {
+	if user, _ := s.Repo.FindByEmail(string(user.Email)); user != nil {
 		return ErrUserAlreadyExists
 	}
 
 	return s.Repo.Save(dtoToUser(user))
 }
 
-func (s *Service) GetUserByID(id string) (*ResponseDTO, error) {
+func (s *Service) GetUserByID(id string) (*generated.UserResponse, error) {
 	if id == "" {
 		return nil, ErrUserIDRequired
 	}
@@ -46,13 +47,13 @@ func (s *Service) GetUserByID(id string) (*ResponseDTO, error) {
 	return userToDTO(user), err
 }
 
-func (s *Service) GetAllUsers() ([]ResponseDTO, error) {
+func (s *Service) GetAllUsers() ([]generated.UserResponse, error) {
 	users, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var usersDTO = make([]ResponseDTO, 0, len(users))
+	var usersDTO = make([]generated.UserResponse, 0, len(users))
 	for _, user := range users {
 		usersDTO = append(usersDTO, *userToDTO(&user))
 	}
@@ -60,12 +61,9 @@ func (s *Service) GetAllUsers() ([]ResponseDTO, error) {
 	return usersDTO, err
 }
 
-func (s *Service) UpdateUser(id string, user *RequestDTO) error {
+func (s *Service) UpdateUser(id string, user *generated.UserRequest) error {
 	if id == "" {
 		return ErrUserIDRequired
-	}
-	if user.ID != id {
-		return ErrUserIDMismatch
 	}
 
 	if _, err := uuid.Parse(id); err != nil {
@@ -85,7 +83,7 @@ func (s *Service) UpdateUser(id string, user *RequestDTO) error {
 		if user, _ := s.Repo.FindByEmail(existingUser.Email); user != nil {
 			return ErrUserAlreadyExists
 		}
-		existingUser.Email = user.Email
+		existingUser.Email = string(user.Email)
 	}
 
 	if user.Name != "" {

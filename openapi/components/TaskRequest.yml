@@ -1,0 +1,21 @@
+type: object
+properties:
+  title:
+    type: string
+  description:
+    type: string
+  due_date:
+    type: string
+    pattern: '^\d{2}/\d{2}/\d{4}$'
+    example: '31/12/2025'
+    description: Date in DD/MM/YYYY format
+  status:
+    $ref: './Status.yml'
+  user_id:
+    type: string
+    format: uuid
+required:
+  - title
+  - description
+  - due_date
+  - user_id

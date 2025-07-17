@@ -1,10 +1,9 @@
 package task
 
 import (
-	"RestCrud/internal/common"
 	"RestCrud/internal/user"
+	generated "RestCrud/openapi"
 	"github.com/google/uuid"
-	"strings"
 )
 
 type Service struct {
@@ -16,8 +15,8 @@ func NewService(repo Repository, userRepo user.Repository) *Service {
 	return &Service{Repo: repo, UserRepo: userRepo}
 }
 
-func (s *Service) CreateTask(task *RequestDTO) error {
-	if task.Title == "" || task.Description == "" || task.DueDate == "" || task.UserId.String() == "" || task.Status == "" {
+func (s *Service) CreateTask(task *generated.TaskRequest) error {
+	if task.Title == "" || task.Description == "" || task.UserId.String() == "" {
 		return ErrAllArgumentsRequired
 	}
 
@@ -25,9 +24,7 @@ func (s *Service) CreateTask(task *RequestDTO) error {
 		return ErrInvalidUserId
 	}
 
-	task.Status = common.Status(strings.ToLower(string(task.Status)))
-
-	if err := task.Validate(); err != nil {
+	if err := Validate(task); err != nil {
 		return err
 	}
 
@@ -38,7 +35,7 @@ func (s *Service) CreateTask(task *RequestDTO) error {
 	return s.Repo.Save(TaskFromDTO(task))
 }
 
-func (s *Service) GetTaskByID(id string) (*ResponseDTO, error) {
+func (s *Service) GetTaskByID(id string) (*generated.TaskResponse, error) {
 	if id == "" {
 		return nil, ErrTaskIdCannotBeEmpty
 	}
@@ -52,19 +49,19 @@ func (s *Service) GetTaskByID(id string) (*ResponseDTO, error) {
 	return ToResponseDTO(task), nil
 }
 
-func (s *Service) GetAllTasks() ([]ResponseDTO, error) {
+func (s *Service) GetAllTasks() ([]generated.TaskResponse, error) {
 	tasks, err := s.Repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
-	var tasksDTO = make([]ResponseDTO, 0, len(tasks))
+	var tasksDTO = make([]generated.TaskResponse, 0, len(tasks))
 	for _, task := range tasks {
 		tasksDTO = append(tasksDTO, *ToResponseDTO(&task))
 	}
 	return tasksDTO, err
 }
 
-func (s *Service) UpdateTask(id string, taskRequest *RequestDTO) error {
+func (s *Service) UpdateTask(id string, taskRequest *generated.TaskRequest) error {
 	if id == "" {
 		return ErrTaskIdCannotBeEmpty
 	}
@@ -73,10 +70,8 @@ func (s *Service) UpdateTask(id string, taskRequest *RequestDTO) error {
 		return ErrIdIsNotValid
 	}
 
-	if taskRequest.Status == "" &&
-		taskRequest.Title == "" &&
+	if taskRequest.Title == "" &&
 		taskRequest.Description == "" &&
-		taskRequest.DueDate == "" &&
 		taskRequest.UserId == uuid.Nil {
 		return ErrAtLeastOneFieldRequired
 	}
@@ -94,14 +89,12 @@ func (s *Service) UpdateTask(id string, taskRequest *RequestDTO) error {
 		task.Description = taskRequest.Description
 	}
 
-	if taskRequest.DueDate != "" {
-		if err := taskRequest.ValidateDate(); err != nil {
-			return err
-		}
-		task.DueDate, err = ParseDateStringToTime(taskRequest.DueDate)
-		if err != nil {
-			return ErrInvalidDateFormat
-		}
+	if err := ValidateDate(taskRequest); err != nil {
+		return err
+	}
+	task.DueDate, err = ParseDateStringToTime(taskRequest.DueDate)
+	if err != nil {
+		return ErrInvalidDateFormat
 	}
 
 	if taskRequest.UserId != uuid.Nil {
@@ -113,16 +106,11 @@ func (s *Service) UpdateTask(id string, taskRequest *RequestDTO) error {
 		task.UserID = taskRequest.UserId
 	}
 
-	if taskRequest.Status != "" {
-		// Normalize the status to lowercase
-		taskRequest.Status = common.Status(strings.ToLower(string(taskRequest.Status)))
-
-		if err := taskRequest.ValidateStatus(); err != nil {
-			return ErrInvalidStatus
-		}
-
-		task.Status = taskRequest.Status
+	if err := ValidateStatus(taskRequest); err != nil {
+		return ErrInvalidStatus
 	}
+
+	task.Status = *taskRequest.Status
 
 	parsedUUID, err := uuid.Parse(id)
 	if err != nil {

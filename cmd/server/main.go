@@ -1,9 +1,11 @@
 package main
 
 import (
+	"RestCrud/internal"
 	"RestCrud/internal/model"
 	"RestCrud/internal/task"
 	"RestCrud/internal/user"
+	"RestCrud/openapi"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
@@ -41,16 +43,22 @@ func main() {
 	userRepo := user.NewRepo(db)
 	userService := user.NewService(userRepo)
 	userHandler := user.NewHandler(userService)
-	user.RegisterRoutes(e, userHandler)
-
 	log.Println("User domain setup completed")
 
 	taskRepo := task.NewRepo(db)
 	taskService := task.NewService(taskRepo, userRepo)
 	taskHandler := task.NewHandler(taskService)
-	task.RegisterRoutes(e, taskHandler)
 
 	log.Println("Task domain setup completed")
+
+	apiGroup := e.Group("/api")
+
+	handler := internal.NewHandler(userHandler, taskHandler)
+
+	generated.RegisterHandlers(apiGroup, generated.ServerInterface(handler))
+
+	e.Static("/swagger-ui", "swagger-ui")
+	e.File("/openapi.yml", "dist/openapi.yml")
 
 	// Start server
 	e.Logger.Fatal(e.Start(":1323"))

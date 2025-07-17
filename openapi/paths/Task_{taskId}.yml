@@ -1,0 +1,79 @@
+get:
+  tags:
+    - task
+  summary: Get task by ID
+  operationId: getTaskById
+  parameters:
+    - name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The task ID
+  responses:
+    '200':
+      description: Task found
+      content:
+        application/json:
+          schema:
+            $ref: "../components/TaskResponse.yml"
+    '404':
+      description: Task not found
+    '500':
+      description: Internal server error
+
+put:
+  tags:
+    - task
+  summary: Update task by ID
+  operationId: updateTask
+  parameters:
+    - name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The task ID
+  requestBody:
+    description: Task object that needs to be updated
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/TaskRequest.yml"
+  responses:
+    '200':
+      description: Task updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../components/TaskResponse.yml"
+    '400':
+      description: Invalid input
+    '404':
+      description: Task not found
+    '500':
+      description: Internal server error
+
+delete:
+  tags:
+    - task
+  summary: Delete task by ID
+  operationId: deleteTask
+  parameters:
+    - name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The task ID
+  responses:
+    '204':
+      description: Task deleted successfully
+    '404':
+      description: Task not found
+    '500':
+      description: Internal server error
