@@ -20,3 +20,6 @@ It provides basic task and user management features with clean architecture and 
 - **GORM** — ORM for database operations
 - **UUID** — Unique ID generation for resources
 - **Docker** — Containerization for local development & production
+
+## Specification
+<img width="1021" height="957" alt="image" src="https://github.com/user-attachments/assets/65bd0160-0ee5-42f3-80ab-00a849fe3156" />
