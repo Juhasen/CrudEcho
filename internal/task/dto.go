@@ -1,39 +1,22 @@
 package task
 
 import (
-	"RestCrud/internal/common"
 	"RestCrud/internal/model"
-	"github.com/google/uuid"
+	generated "RestCrud/openapi"
 	"time"
 )
 
-type ResponseDTO struct {
-	Title       string        `json:"title,omitempty"`
-	Description string        `json:"description,omitempty"`
-	DueDate     string        `json:"due_date,omitempty"`
-	UserId      uuid.UUID     `json:"user_id,omitempty"`
-	Status      common.Status `json:"status" validate:"omitempty, oneof=pending in_progress completed cancelled"`
-}
-
-type RequestDTO struct {
-	Title       string        `json:"title,omitempty"`
-	Description string        `json:"description,omitempty"`
-	DueDate     string        `json:"due_date,omitempty"`
-	UserId      uuid.UUID     `json:"user_id,omitempty"`
-	Status      common.Status `json:"status,omitempty" validate:"oneof=pending in_progress completed cancelled"`
-}
-
-func (t *RequestDTO) ValidateStatus() error {
-	if t.Status != common.Pending &&
-		t.Status != common.InProgress &&
-		t.Status != common.Completed &&
-		t.Status != common.Cancelled {
+func ValidateStatus(t *generated.TaskRequest) error {
+	if *t.Status != generated.CANCELLED &&
+		*t.Status != generated.COMPLETED &&
+		*t.Status != generated.INPROGRESS &&
+		*t.Status != generated.PENDING {
 		return ErrInvalidStatus
 	}
 	return nil
 }
 
-func (t *RequestDTO) ValidateDate() error {
+func ValidateDate(t *generated.TaskRequest) error {
 	// Parse due date
 	parsedDate, err := time.Parse("02/01/2006", t.DueDate)
 	if err != nil {
@@ -48,27 +31,27 @@ func (t *RequestDTO) ValidateDate() error {
 	return nil
 }
 
-func (t *RequestDTO) Validate() error {
-	if err := t.ValidateDate(); err != nil {
+func Validate(t *generated.TaskRequest) error {
+	if err := ValidateDate(t); err != nil {
 		return err
 	}
-	if err := t.ValidateStatus(); err != nil {
+	if err := ValidateStatus(t); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ToResponseDTO(t *model.Task) *ResponseDTO {
-	return &ResponseDTO{
+func ToResponseDTO(t *model.Task) *generated.TaskResponse {
+	return &generated.TaskResponse{
 		Title:       t.Title,
 		Description: t.Description,
-		DueDate:     FormatTimeToDateString(t.DueDate),
+		DueDate:     t.DueDate,
 		UserId:      t.UserID,
 		Status:      t.Status,
 	}
 }
 
-func TaskFromDTO(dto *RequestDTO) *model.Task {
+func TaskFromDTO(dto *generated.TaskRequest) *model.Task {
 	convertedTime, err := ParseDateStringToTime(dto.DueDate)
 	if err != nil {
 		return nil
@@ -77,7 +60,7 @@ func TaskFromDTO(dto *RequestDTO) *model.Task {
 		Title:       dto.Title,
 		Description: dto.Description,
 		DueDate:     convertedTime,
-		Status:      dto.Status,
+		Status:      *dto.Status,
 		UserID:      dto.UserId,
 	}
 }

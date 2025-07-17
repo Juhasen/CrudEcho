@@ -1,0 +1,38 @@
+get:
+  tags:
+    - task
+  summary: Get all tasks
+  operationId: getTasks
+  responses:
+    '200':
+      description: A list of tasks
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../components/TaskResponse.yml"
+    '500':
+      description: Internal server error
+
+post:
+  tags:
+    - task
+  summary: Create a new task
+  operationId: createTask
+  requestBody:
+    description: Task object that needs to be created
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../components/TaskRequest.yml"
+  responses:
+    '201':
+      description: Task created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../components/TaskResponse.yml"
+    '400':
+      description: Invalid input

@@ -1,0 +1,42 @@
+# schema version
+openapi: 3.0.0
+
+# docs
+info:
+  title: TODO
+  description: API Specification for TODO API
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:1323/api
+
+tags:
+  - name: user
+    description: Manage users
+  - name: task
+    description: Manage tasks
+
+# endpoints
+paths:
+  /users/{userId}:
+    $ref: paths/User_{userId}.yml
+  /users:
+    $ref: paths/UserPath.yml
+  /tasks/{taskId}:
+    $ref: paths/Task_{taskId}.yml
+  /tasks:
+    $ref: paths/TaskPath.yml
+
+# reusable objects such as schemas, error types, request bodies
+components:
+  schemas:
+    TaskResponse:
+      $ref: components/TaskResponse.yml
+    TaskRequest:
+      $ref: components/TaskRequest.yml
+    UserResponse:
+      $ref: components/UserResponse.yml
+    UserRequest:
+      $ref: components/UserRequest.yml
+    Status:
+      $ref: components/Status.yml

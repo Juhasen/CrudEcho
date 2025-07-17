@@ -1,30 +1,23 @@
 package user
 
 import (
+	generated "RestCrud/openapi"
 	"RestCrud/pkg/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-func RegisterRoutes(e *echo.Echo, h *Handler) {
-	e.POST("/api/users", h.CreateUser)
-	e.GET("/api/users/:id", h.GetUser)
-	e.GET("/api/users", h.GetAllUsers)
-	e.PUT("/api/users/:id", h.UpdateUser)
-	e.DELETE("/api/users/:id", h.DeleteUser)
-}
-
-type Handler struct {
+type UserHandler struct {
 	Service *Service
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{Service: service}
+func NewHandler(service *Service) *UserHandler {
+	return &UserHandler{Service: service}
 }
 
-func (h *Handler) CreateUser(c echo.Context) error {
-	var userRequest ResponseDTO
+func (h *UserHandler) CreateUser(c echo.Context) error {
+	var userRequest generated.UserResponse
 
 	if err := c.Bind(&userRequest); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
@@ -52,7 +45,7 @@ func (h *Handler) CreateUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, userRequest)
 }
 
-func (h *Handler) GetUser(c echo.Context) error {
+func (h *UserHandler) GetUserById(c echo.Context) error {
 	id := c.Param("id")
 
 	if id == "" {
@@ -77,7 +70,7 @@ func (h *Handler) GetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) GetAllUsers(c echo.Context) error {
+func (h *UserHandler) GetAllUsers(c echo.Context) error {
 	users, err := h.Service.GetAllUsers()
 
 	if err != nil {
@@ -95,20 +88,18 @@ func (h *Handler) GetAllUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, users)
 }
 
-func (h *Handler) UpdateUser(c echo.Context) error {
+func (h *UserHandler) UpdateUser(c echo.Context) error {
 	id := c.Param("id")
 
 	if id == "" {
 		return utils.ReturnApiError(c, http.StatusBadRequest, ErrUserIDRequired)
 	}
 
-	var user RequestDTO
+	var user generated.UserRequest
 
 	if err := c.Bind(&user); err != nil {
 		return utils.ReturnApiError(c, http.StatusBadRequest, err)
 	}
-
-	user.ID = id
 
 	if err := h.Service.UpdateUser(id, &user); err != nil {
 		switch {
@@ -130,7 +121,7 @@ func (h *Handler) UpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) DeleteUser(c echo.Context) error {
+func (h *UserHandler) DeleteUser(c echo.Context) error {
 	id := c.Param("id")
 
 	if id == "" {

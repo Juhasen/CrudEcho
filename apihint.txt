@@ -1,0 +1,77 @@
+Makefile:
+
+openapi:
+@echo "Generating code from OpenAPI specifications"
+mkdir -p dist
+
+# Use redocly to bundle all of the open api specs into a single file.
+docker run --user=$(UID):$(GID) --rm -it -v$(HOME):$(HOME) -w $(PWD) redocly/cli:$(REDOCLY_VERSION) bundle spec/openapi/openapi.yml -o dist/openapi.yml
+
+# Now, generate golang code from the spec file.
+go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@$(OAPI_CODEGEN_VERSION)
+oapi-codegen -generate types,client,server,spec,skip-prune -package generated -o spec/generated.go dist/openapi.yml
+
+rm -rf dist
+
+
+///////////
+
+Plik wejściowy do openapi
+
+openapi: 3.0.0
+info:
+title: draftsman
+description: >-
+Service which is responsible for staging and configuration of the ingestion pipeline.
+version: 25.02.00
+servers:
+- url: http://localhost:8086/api/v4/ingestion
+paths:
+/v4/ingestion/staging/specification:
+$ref: paths/v4_ingestion_staging_specification.yml
+/v4/ingestion/staging/specification/{objectType}:
+$ref: paths/v4_ingestion_staging_specification_{objectType}.yml
+/v4/ingestion/staging/specification/{objectType}/publish:
+$ref: paths/v4_ingestion_staging_specification_{objectType}_publish.yml
+/v4/discovery/objects:
+$ref: paths/v4_discovery_objects.yml
+/v4/discovery/{objectType}:
+$ref: paths/v4_discovery_{objectType}.yml
+components:
+schemas:
+IngestionSpecificationList:
+$ref: "components/schemas/IngestionSpecificationList.yml"
+IngestionSpecification:
+$ref: "components/schemas/IngestionSpecification.yml"
+IngestionTransformation:
+$ref: "components/schemas/IngestionTransformation.yml"
+NormalizationTransformation:
+$ref: "components/schemas/NormalizationTransformation.yml"
+EnhancementTransformation:
+$ref: "components/schemas/EnhancementTransformation.yml"
+DimensionTransformation:
+$ref: "components/schemas/DimensionTransformation.yml"
+MetricTransformation:
+$ref: "components/schemas/MetricTransformation.yml"
+IngestionDictionary:
+$ref: "components/schemas/IngestionDictionary.yml"
+DimensionItem:
+$ref: "components/schemas/DimensionItem.yml"
+MetricItem:
+$ref: "components/schemas/MetricItem.yml"
+IngestionSpecificationPublishResponse:
+$ref: "components/schemas/IngestionSpecificationPublishResponse.yml"
+GetAllDictionariesResp:
+$ref: "components/schemas/GetAllDictionariesResp.yml"
+DictResp:
+$ref: "components/schemas/DictResp.yml"
+DiscoveryObject:
+$ref: "components/schemas/DiscoveryObject.yml"
+DiscoveryObjectHeader:
+$ref: "components/schemas/DiscoveryObjectHeader.yml"
+DiscoveryObjectsList:
+$ref: "components/schemas/DiscoveryObjectsList.yml"
+DiscoveryObjectTypes:
+$ref: "components/schemas/DiscoveryObjectTypes.yml"
+
+
